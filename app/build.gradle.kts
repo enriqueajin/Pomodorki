@@ -3,6 +3,9 @@ plugins {
     alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.google.services)
     alias(libs.plugins.crashlytics)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.hilt)
+    alias(libs.plugins.compose.compiler)
 }
 
 android {
@@ -65,6 +68,8 @@ dependencies {
     implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
+    implementation(libs.dagger.hilt)
+    ksp(libs.dagger.hilt.compiler)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
