@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -70,6 +71,9 @@ dependencies {
     implementation(libs.firebase.firestore)
     implementation(libs.dagger.hilt)
     ksp(libs.dagger.hilt.compiler)
+    implementation(libs.navigation.compose)
+    implementation(libs.hilt.navigation)
+    implementation(libs.kotlinx.serialization.json)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
