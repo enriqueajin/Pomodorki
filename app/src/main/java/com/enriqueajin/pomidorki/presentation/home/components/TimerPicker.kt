@@ -18,6 +18,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
@@ -35,10 +38,14 @@ fun TimerPicker() {
         listOf("Pomodoro", "Short Break", "Long Break")
     }
     var selected by rememberSaveable { mutableStateOf(0) }
+    val tabRowTestTag = stringResource(id = R.string.timer_picker_tab_row)
 
     TabRow(
         modifier = Modifier
-            .clip(RoundedCornerShape(100)),
+            .clip(RoundedCornerShape(100))
+            .semantics {
+                contentDescription = tabRowTestTag
+            },
         selectedTabIndex = selected,
         containerColor = pinkSecondary,
         indicator = { tabPositions ->
@@ -60,7 +67,10 @@ fun TimerPicker() {
             Tab(
                 modifier = Modifier
                     .zIndex(1f)
-                    .height(55.dp),
+                    .height(55.dp)
+                    .semantics {
+                        contentDescription = tab
+                    },
                 selected = selected == index ,
                 onClick = { selected = index },
             ) {

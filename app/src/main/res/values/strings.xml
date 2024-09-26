@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Pomidorki</string>
+    <string name="timer_picker_tab_row">Timer Picker TabRow</string>
+    <string name="tab_pomodoro">Pomodoro</string>
+    <string name="tab_short_break">Short Break</string>
+    <string name="tab_long_break">Long Break</string>
 </resources>
