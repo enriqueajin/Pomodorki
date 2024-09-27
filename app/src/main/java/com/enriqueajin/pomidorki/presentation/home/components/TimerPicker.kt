@@ -12,7 +12,7 @@ import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -30,18 +30,20 @@ import androidx.compose.ui.zIndex
 import com.enriqueajin.pomidorki.R
 import com.enriqueajin.pomidorki.presentation.ui.theme.darkPink
 import com.enriqueajin.pomidorki.presentation.ui.theme.pinkSecondary
+import com.enriqueajin.pomidorki.utils.Constants.pomodoroTabItems
 
 @Composable
-fun TimerPicker() {
+fun TimerPicker(
+    modifier: Modifier,
+    items: List<String>,
+    onTabSelected: (String) -> Unit
+) {
 
-    val items = rememberSaveable {
-        listOf("Pomodoro", "Short Break", "Long Break")
-    }
-    var selected by rememberSaveable { mutableStateOf(0) }
+    var selected by rememberSaveable { mutableIntStateOf(0) }
     val tabRowTestTag = stringResource(id = R.string.timer_picker_tab_row)
 
     TabRow(
-        modifier = Modifier
+        modifier = modifier
             .clip(RoundedCornerShape(100))
             .semantics {
                 contentDescription = tabRowTestTag
@@ -72,7 +74,10 @@ fun TimerPicker() {
                         contentDescription = tab
                     },
                 selected = selected == index ,
-                onClick = { selected = index },
+                onClick = {
+                    selected = index
+                    onTabSelected(tab)
+                },
             ) {
                 val font = if (selected == index) {
                     R.font.montserrat_medium
@@ -83,7 +88,7 @@ fun TimerPicker() {
                 Text(
                     text = tab,
                     color = Color.White,
-                    fontSize = 17.sp,
+                    fontSize = 14.sp,
                     fontFamily = FontFamily(
                         Font(
                             resId = font
@@ -98,5 +103,9 @@ fun TimerPicker() {
 @Preview(showBackground = true)
 @Composable
 fun TimerPickerPreview() {
-        TimerPicker()
+    TimerPicker(
+        modifier = Modifier.padding(horizontal = 30.dp),
+        items = pomodoroTabItems,
+        onTabSelected = {}
+    )
 }

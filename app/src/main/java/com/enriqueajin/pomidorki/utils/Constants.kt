@@ -32,4 +32,6 @@ object Constants {
             ),
         )
     }
+
+    val pomodoroTabItems = listOf("Pomodoro", "Short Break", "Long Break")
 }

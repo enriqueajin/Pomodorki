@@ -1,6 +1,7 @@
 package com.enriqueajin.pomidorki.presentation.home.components
 
 import android.content.Context
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasContentDescription
@@ -8,6 +9,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.performClick
 import androidx.test.platform.app.InstrumentationRegistry
 import com.enriqueajin.pomidorki.R
+import com.enriqueajin.pomidorki.utils.Constants.pomodoroTabItems
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -29,7 +31,11 @@ class TimerPickerTest {
         )
 
         composeTestRule.setContent {
-            TimerPicker()
+            TimerPicker(
+                modifier = Modifier,
+                items = pomodoroTabItems,
+                onTabSelected = {}
+            )
         }
     }
 
