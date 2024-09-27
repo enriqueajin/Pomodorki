@@ -13,7 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,11 +35,13 @@ import com.enriqueajin.pomidorki.utils.Constants.pomodoroTabItems
 @Composable
 fun TimerPicker(
     modifier: Modifier,
+    selected: Int,
     items: List<String>,
-    onTabSelected: (String) -> Unit
+    containerColor: Color,
+    indicatorColor: Color,
+    onTabSelected: (Int) -> Unit
 ) {
 
-    var selected by rememberSaveable { mutableIntStateOf(0) }
     val tabRowTestTag = stringResource(id = R.string.timer_picker_tab_row)
 
     TabRow(
@@ -49,7 +51,7 @@ fun TimerPicker(
                 contentDescription = tabRowTestTag
             },
         selectedTabIndex = selected,
-        containerColor = pinkSecondary,
+        containerColor = containerColor,
         indicator = { tabPositions ->
             TabRowDefaults.apply {
                 Box(
@@ -58,7 +60,7 @@ fun TimerPicker(
                         .fillMaxHeight()
                         .padding(7.dp)
                         .background(
-                            color = darkPink,
+                            color = indicatorColor,
                             shape = RoundedCornerShape(100)
                         )
                 )
@@ -75,8 +77,7 @@ fun TimerPicker(
                     },
                 selected = selected == index ,
                 onClick = {
-                    selected = index
-                    onTabSelected(tab)
+                    onTabSelected(index)
                 },
             ) {
                 val font = if (selected == index) {
@@ -103,9 +104,15 @@ fun TimerPicker(
 @Preview(showBackground = true)
 @Composable
 fun TimerPickerPreview() {
+    var selected by remember {
+        mutableIntStateOf(1)
+    }
     TimerPicker(
-        modifier = Modifier.padding(horizontal = 30.dp),
+        modifier = Modifier,
+        selected = selected,
         items = pomodoroTabItems,
-        onTabSelected = {}
+        containerColor = pinkSecondary,
+        indicatorColor = darkPink,
+        onTabSelected = { selected = it }
     )
 }
