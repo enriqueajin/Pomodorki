@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -28,9 +29,11 @@ fun PomodoroCountdown(
     modifier: Modifier,
     initialValue: Int,
     arcColor: Color,
+    timeElapsedArcColor: Color,
     minValue: Int = 0,
     maxValue: Int = 100,
     circleRadius: Float,
+    backgroundColor: Color,
     onPositionChange: (Int) -> Unit,
 ) {
     var circleCenter by remember { mutableStateOf(Offset.Zero) }
@@ -51,8 +54,8 @@ fun PomodoroCountdown(
             drawCircle(
                 brush = Brush.linearGradient(
                     colors = listOf(
-                        Color.White,
-                        Color.White,
+                        backgroundColor,
+                        backgroundColor,
                     )
                 ),
                 radius = circleRadius,
@@ -61,8 +64,8 @@ fun PomodoroCountdown(
             drawCircle(
                 brush = Brush.linearGradient(
                     colors = listOf(
-                        Color.White,
-                        Color.White,
+                        backgroundColor,
+                        backgroundColor,
                     )
                 ),
                 radius = circleRadius + 70f,
@@ -72,7 +75,7 @@ fun PomodoroCountdown(
                 style = Stroke(
                     width = circleThickness
                 ),
-                color = Color.LightGray,
+                color = timeElapsedArcColor,
                 radius = circleRadius,
                 center = circleCenter,
             )
@@ -107,7 +110,9 @@ fun PomodoroCountdownPreview() {
             .background(pinkPrimary),
         initialValue = 67,
         arcColor = pinkSecondary,
+        timeElapsedArcColor = Color.LightGray,
         circleRadius = 340f,
+        backgroundColor = MaterialTheme.colorScheme.background,
         onPositionChange = {}
     )
 }

@@ -3,6 +3,7 @@ package com.enriqueajin.pomidorki.presentation.home
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,6 +22,7 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
@@ -47,9 +49,9 @@ import com.enriqueajin.pomidorki.R
 import com.enriqueajin.pomidorki.presentation.home.components.PomodoroCountdown
 import com.enriqueajin.pomidorki.presentation.home.components.TimerButton
 import com.enriqueajin.pomidorki.presentation.home.components.TimerPicker
-import com.enriqueajin.pomidorki.presentation.ui.theme.blackPomodoro
 import com.enriqueajin.pomidorki.presentation.ui.theme.darkPink
 import com.enriqueajin.pomidorki.presentation.ui.theme.greenPomodoro
+import com.enriqueajin.pomidorki.presentation.ui.theme.lightGrayPomodoro
 import com.enriqueajin.pomidorki.presentation.ui.theme.longBreakArcBar
 import com.enriqueajin.pomidorki.presentation.ui.theme.longBreakBackground
 import com.enriqueajin.pomidorki.presentation.ui.theme.longBreakPickerContainer
@@ -109,7 +111,12 @@ fun TimerScreen() {
             }
         }
     }
-    val timerTextColor by remember(selected) {
+    val timeElapsedArcColor = if (isSystemInDarkTheme()) {
+        MaterialTheme.colorScheme.onSurface
+    } else {
+        lightGrayPomodoro
+    }
+    val lightThemeTimerTextColor by remember(selected) {
         derivedStateOf {
             when (selected) {
                 0 -> darkPink
@@ -118,6 +125,11 @@ fun TimerScreen() {
                 else -> darkPink
             }
         }
+    }
+    val timerTextColor = if (isSystemInDarkTheme()) {
+        MaterialTheme.colorScheme.onSurface
+    } else {
+        lightThemeTimerTextColor
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -182,7 +194,9 @@ fun TimerScreen() {
                             .background(pinkPrimary),
                         initialValue = 67,
                         arcColor = timerArcColor,
+                        timeElapsedArcColor = timeElapsedArcColor,
                         circleRadius = 340f,
+                        backgroundColor = MaterialTheme.colorScheme.background,
                         onPositionChange = {}
                     )
                     Text(
@@ -236,7 +250,7 @@ fun TimerScreen() {
                     onValueChange = {},
                     colors = OutlinedTextFieldDefaults.colors(
                         disabledBorderColor = timerArcColor,
-                        disabledTextColor = blackPomodoro
+                        disabledTextColor = MaterialTheme.colorScheme.onSurface,
                     )
                 )
                 Spacer(modifier = Modifier.height(30.dp))

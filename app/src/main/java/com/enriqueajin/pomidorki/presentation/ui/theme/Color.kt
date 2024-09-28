@@ -16,6 +16,7 @@ val darkPink = Color(0xFFAC1E1E)
 val greenPomodoro = Color(0xFF12AA23)
 val whitePomodoro = Color(0xFFFFFFFF)
 val blackPomodoro = Color(0xFF000000)
+val lightGrayPomodoro = Color(0xFFCCCCCC)
 
 // Short Break colors
 val shortBreakBackground = Color(0xFF98B7F9)
