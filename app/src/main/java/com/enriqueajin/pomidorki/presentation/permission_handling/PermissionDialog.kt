@@ -105,3 +105,21 @@ class PhoneCallPermissionTextProvider: PermissionTextProvider {
         }
     }
 }
+
+class PostNotificationsPermissionTextProvider: PermissionTextProvider {
+    override fun getDescription(isPermanentlyDeclined: Boolean): String {
+        return if(isPermanentlyDeclined) {
+            "It seems you permanently declined notification permission. " +
+                    "You can go to the app settings to grant it."
+        } else {
+            "This app needs notification permission so that you can sde " +
+                    "the pomodoro notification."
+        }
+    }
+}
+
+class NonePermission: PermissionTextProvider {
+    override fun getDescription(isPermanentlyDeclined: Boolean): String {
+        return ""
+    }
+}

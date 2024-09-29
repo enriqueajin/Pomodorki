@@ -1,10 +1,7 @@
 package com.enriqueajin.pomidorki.presentation.home
 
 import android.Manifest
-import android.app.Activity
-import android.content.Intent
-import android.net.Uri
-import android.provider.Settings
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -60,11 +57,13 @@ import com.enriqueajin.pomidorki.presentation.MainActivity
 import com.enriqueajin.pomidorki.presentation.home.components.PomodoroCountdown
 import com.enriqueajin.pomidorki.presentation.home.components.TimerButton
 import com.enriqueajin.pomidorki.presentation.home.components.TimerPicker
-import com.enriqueajin.pomidorki.presentation.permission_handling.CameraPermissionTextProvider
 import com.enriqueajin.pomidorki.presentation.permission_handling.PermissionDialog
 import com.enriqueajin.pomidorki.presentation.permission_handling.PermissionHandlingViewModel
-import com.enriqueajin.pomidorki.presentation.permission_handling.PhoneCallPermissionTextProvider
-import com.enriqueajin.pomidorki.presentation.permission_handling.RecordAudioPermissionTextProvider
+import com.enriqueajin.pomidorki.presentation.permission_handling.Permissions
+import com.enriqueajin.pomidorki.presentation.permission_handling.asManifestPermission
+import com.enriqueajin.pomidorki.presentation.permission_handling.asPermission
+import com.enriqueajin.pomidorki.presentation.permission_handling.asPermissionText
+import com.enriqueajin.pomidorki.presentation.permission_handling.openAppSettings
 import com.enriqueajin.pomidorki.presentation.ui.theme.darkPink
 import com.enriqueajin.pomidorki.presentation.ui.theme.greenPomodoro
 import com.enriqueajin.pomidorki.presentation.ui.theme.lightGrayPomodoro
@@ -157,25 +156,13 @@ fun TimerScreen() {
         Manifest.permission.CALL_PHONE,
     )
 
-    // Single permission
-    val cameraPermissionResultLauncher = rememberLauncherForActivityResult(
+    val postNotificationsPermissionResultLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = { isGranted ->
-            permissionViewModel.onPermissionResult(
-                permission = Manifest.permission.CAMERA,
-                isGranted = isGranted
-            )
-        }
-    )
-
-    // Multiple permissions
-    val multiplePermissionResultLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestMultiplePermissions(),
-        onResult = { perms ->
-            permissionsToRequest.forEach { permission ->
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 permissionViewModel.onPermissionResult(
-                    permission = permission,
-                    isGranted = perms[permission] == true
+                    permission = Permissions.POST_NOTIFICATIONS,
+                    isGranted = isGranted
                 )
             }
         }
@@ -198,11 +185,7 @@ fun TimerScreen() {
                 IconButton(
                     modifier = Modifier
                         .align(Alignment.End),
-                    onClick = {
-                        cameraPermissionResultLauncher.launch(
-                            Manifest.permission.CAMERA
-                        )
-                    }
+                    onClick = { }
                 ) {
                     Icon(
                         modifier = Modifier
@@ -314,7 +297,11 @@ fun TimerScreen() {
                     icon = Icons.Default.PlayArrow,
                     containerColor = greenPomodoro,
                     onClick = {
-                        multiplePermissionResultLauncher.launch(permissionsToRequest)
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            postNotificationsPermissionResultLauncher.launch(
+                                Manifest.permission.POST_NOTIFICATIONS
+                            )
+                        }
                     },
                 )
                 Spacer(modifier = Modifier.height(30.dp))
@@ -324,40 +311,19 @@ fun TimerScreen() {
             .reversed()
             .forEach { permission ->
                 PermissionDialog(
-                    permissionTextProvider = when (permission) {
-                        Manifest.permission.CAMERA -> {
-                            CameraPermissionTextProvider()
-                        }
-                        Manifest.permission.RECORD_AUDIO -> {
-                            RecordAudioPermissionTextProvider()
-                        }
-                        Manifest.permission.CALL_PHONE -> {
-                            PhoneCallPermissionTextProvider()
-                        }
-                        else -> return@forEach
-                    },
+                    permissionTextProvider = permission.asPermissionText(),
                     isPermanentlyDeclined = !shouldShowRequestPermissionRationale(
                         context as MainActivity,
-                        permission
+                        permission.asManifestPermission()
                     ),
                     onDismiss = permissionViewModel::dismissDialog,
                     onOkClick = {
                         permissionViewModel.dismissDialog()
-                        multiplePermissionResultLauncher.launch(
-                            arrayOf(permission)
-                        )
                     },
                     onGoToAppSettingsClick = { context.openAppSettings() }
                 )
             }
     }
-}
-
-fun Activity.openAppSettings() {
-    Intent(
-        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-        Uri.fromParts("package", packageName, null)
-    ).also(::startActivity)
 }
 
 @Preview(showBackground = true, showSystemUi = true)

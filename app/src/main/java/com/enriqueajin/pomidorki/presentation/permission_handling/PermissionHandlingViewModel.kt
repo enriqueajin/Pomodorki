@@ -9,14 +9,14 @@ import javax.inject.Inject
 class PermissionHandlingViewModel @Inject constructor() : ViewModel() {
 
     // FIFO: [RECORD_AUDIO, CAMERA]
-    val visiblePermissionDialogQueue = mutableStateListOf<String>()
+    val visiblePermissionDialogQueue = mutableStateListOf<Permissions>()
 
     fun dismissDialog() {
         visiblePermissionDialogQueue.removeFirst()
     }
 
     fun onPermissionResult(
-        permission: String,
+        permission: Permissions,
         isGranted: Boolean
     ) {
         if(!isGranted && !visiblePermissionDialogQueue.contains(permission)) {
