@@ -24,7 +24,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -44,9 +43,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -56,7 +57,9 @@ import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.enriqueajin.pomidorki.R
+import com.enriqueajin.pomidorki.data.services.Action
 import com.enriqueajin.pomidorki.data.services.StopwatchService
+import com.enriqueajin.pomidorki.data.services.toAction
 import com.enriqueajin.pomidorki.presentation.MainActivity
 import com.enriqueajin.pomidorki.presentation.home.components.PomodoroCountdown
 import com.enriqueajin.pomidorki.presentation.home.components.TimerButton
@@ -172,8 +175,41 @@ fun TimerScreen() {
         }
     )
 
-    var currentStopwatchAction by rememberSaveable {
-        mutableStateOf(StopwatchService.Actions.NONE.toString())
+    var currentStopwatchAction by remember {
+        mutableStateOf(Action.NONE)
+    }
+    val buttonText by remember(currentStopwatchAction) {
+        derivedStateOf {
+            when(currentStopwatchAction) {
+                Action.NONE -> "Start"
+                Action.START -> "Pause"
+                Action.PAUSE -> "Resume"
+                Action.RESUME -> "Pause"
+                else -> "Start"
+            }
+        }
+    }
+    val buttonIconId by remember(currentStopwatchAction) {
+        derivedStateOf {
+            when(currentStopwatchAction) {
+                Action.NONE -> R.drawable.ic_play
+                Action.START -> R.drawable.ic_pause
+                Action.PAUSE -> R.drawable.ic_play
+                Action.RESUME -> R.drawable.ic_pause
+                else -> R.drawable.ic_play
+            }
+        }
+    }
+    val buttonColor by remember(currentStopwatchAction) {
+        derivedStateOf {
+            when(currentStopwatchAction) {
+                Action.NONE -> greenPomodoro
+                Action.START -> darkPink
+                Action.PAUSE -> greenPomodoro
+                Action.RESUME -> darkPink
+                else -> greenPomodoro
+            }
+        }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -299,11 +335,9 @@ fun TimerScreen() {
                 )
                 Spacer(modifier = Modifier.height(30.dp))
                 TimerButton(
-                    text = stringResource(
-                        id = R.string.start_button
-                    ),
-                    icon = Icons.Default.PlayArrow,
-                    containerColor = greenPomodoro,
+                    text = buttonText,
+                    icon = ImageVector.vectorResource(buttonIconId),
+                    containerColor = buttonColor,
                     onClick = {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                             val isPermissionGranted = isPermissionGranted(
@@ -313,8 +347,8 @@ fun TimerScreen() {
                             if (isPermissionGranted) {
                                 startStopwatchService(
                                     context = context,
-                                    currentAction = currentStopwatchAction,
-                                    onActionChange = { currentStopwatchAction = it }
+                                    currentAction = currentStopwatchAction.toString(),
+                                    onActionChange = { currentStopwatchAction = it.toAction() }
                                 )
                             } else {
                                 postNotificationsPermissionResultLauncher.launch(
@@ -324,8 +358,8 @@ fun TimerScreen() {
                         } else {
                             startStopwatchService(
                                 context = context,
-                                currentAction = currentStopwatchAction,
-                                onActionChange = { currentStopwatchAction = it }
+                                currentAction = currentStopwatchAction.toString(),
+                                onActionChange = { currentStopwatchAction = it.toAction() }
                             )
                         }
                     },
@@ -358,22 +392,22 @@ private fun startStopwatchService(
     onActionChange: (String) -> Unit,
 ) {
     when(currentAction) {
-        StopwatchService.Actions.NONE.toString(),
-        StopwatchService.Actions.PAUSE.toString() -> {
+        Action.NONE.toString(),
+        Action.PAUSE.toString() -> {
             Intent(context, StopwatchService::class.java).also {
-                it.action = StopwatchService.Actions.START.toString()
+                it.action = Action.START.toString()
                 it.putExtra("PAUSE,", "PAUSE")
                 context.startService(it)
             }
-            onActionChange(StopwatchService.Actions.START.toString())
+            onActionChange(Action.START.toString())
         }
-        StopwatchService.Actions.START.toString() -> {
+        Action.START.toString() -> {
             Intent(context, StopwatchService::class.java).also {
-                it.action = StopwatchService.Actions.PAUSE.toString()
+                it.action = Action.PAUSE.toString()
                 it.putExtra("RESUME,", "RESUME")
                 context.startService(it)
             }
-            onActionChange(StopwatchService.Actions.PAUSE.toString())
+            onActionChange(Action.PAUSE.toString())
         }
     }
 }

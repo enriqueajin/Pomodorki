@@ -16,9 +16,9 @@ class StopwatchService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
-            Actions.START.toString() -> start(intent)
-            Actions.STOP.toString() -> stopSelf()
-            Actions.PAUSE.toString() -> onPause(intent)
+            Action.START.toString() -> start(intent)
+            Action.STOP.toString() -> stopSelf()
+            Action.PAUSE.toString() -> onPause(intent)
         }
         return super.onStartCommand(intent, flags, startId)
     }
@@ -82,9 +82,5 @@ class StopwatchService : Service() {
             .addAction(0, "CANCEL", cancelPendingIntent)
             .build()
         startForeground(2, notification)
-    }
-
-    enum class Actions {
-        START, STOP, CANCEL, PAUSE, NONE
     }
 }

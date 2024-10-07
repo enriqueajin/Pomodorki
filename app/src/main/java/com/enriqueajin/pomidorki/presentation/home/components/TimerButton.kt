@@ -30,11 +30,11 @@ fun TimerButton(
     text: String,
     icon: ImageVector,
     containerColor: Color,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     Button(
         modifier = Modifier
-            .width(140.dp)
+            .width(160.dp)
             .height(45.dp),
         onClick = onClick,
         colors = ButtonDefaults.buttonColors(
@@ -69,9 +69,9 @@ fun TimerButton(
 @Composable
 fun TimerButtonPreview() {
     TimerButton(
-        text = "Start",
+        text = "Resume",
         icon = Icons.Default.PlayArrow,
         containerColor = greenPomodoro,
-        onClick = {}
+        onClick = {},
     )
 }
