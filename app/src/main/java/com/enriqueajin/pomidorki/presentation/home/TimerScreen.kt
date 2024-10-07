@@ -1,6 +1,8 @@
 package com.enriqueajin.pomidorki.presentation.home
 
 import android.Manifest
+import android.content.Context
+import android.content.Intent
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -34,6 +36,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -53,6 +56,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.enriqueajin.pomidorki.R
+import com.enriqueajin.pomidorki.data.services.StopwatchService
 import com.enriqueajin.pomidorki.presentation.MainActivity
 import com.enriqueajin.pomidorki.presentation.home.components.PomodoroCountdown
 import com.enriqueajin.pomidorki.presentation.home.components.TimerButton
@@ -61,8 +65,8 @@ import com.enriqueajin.pomidorki.presentation.permission_handling.PermissionDial
 import com.enriqueajin.pomidorki.presentation.permission_handling.PermissionHandlingViewModel
 import com.enriqueajin.pomidorki.presentation.permission_handling.Permissions
 import com.enriqueajin.pomidorki.presentation.permission_handling.asManifestPermission
-import com.enriqueajin.pomidorki.presentation.permission_handling.asPermission
 import com.enriqueajin.pomidorki.presentation.permission_handling.asPermissionText
+import com.enriqueajin.pomidorki.presentation.permission_handling.isPermissionGranted
 import com.enriqueajin.pomidorki.presentation.permission_handling.openAppSettings
 import com.enriqueajin.pomidorki.presentation.ui.theme.darkPink
 import com.enriqueajin.pomidorki.presentation.ui.theme.greenPomodoro
@@ -167,6 +171,10 @@ fun TimerScreen() {
             }
         }
     )
+
+    var currentStopwatchAction by rememberSaveable {
+        mutableStateOf(StopwatchService.Actions.NONE.toString())
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Box(
@@ -298,8 +306,26 @@ fun TimerScreen() {
                     containerColor = greenPomodoro,
                     onClick = {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            postNotificationsPermissionResultLauncher.launch(
-                                Manifest.permission.POST_NOTIFICATIONS
+                            val isPermissionGranted = isPermissionGranted(
+                                context = context,
+                                permission = Manifest.permission.POST_NOTIFICATIONS
+                            )
+                            if (isPermissionGranted) {
+                                startStopwatchService(
+                                    context = context,
+                                    currentAction = currentStopwatchAction,
+                                    onActionChange = { currentStopwatchAction = it }
+                                )
+                            } else {
+                                postNotificationsPermissionResultLauncher.launch(
+                                    Manifest.permission.POST_NOTIFICATIONS
+                                )
+                            }
+                        } else {
+                            startStopwatchService(
+                                context = context,
+                                currentAction = currentStopwatchAction,
+                                onActionChange = { currentStopwatchAction = it }
                             )
                         }
                     },
@@ -323,6 +349,32 @@ fun TimerScreen() {
                     onGoToAppSettingsClick = { context.openAppSettings() }
                 )
             }
+    }
+}
+
+private fun startStopwatchService(
+    context: Context,
+    currentAction: String,
+    onActionChange: (String) -> Unit,
+) {
+    when(currentAction) {
+        StopwatchService.Actions.NONE.toString(),
+        StopwatchService.Actions.PAUSE.toString() -> {
+            Intent(context, StopwatchService::class.java).also {
+                it.action = StopwatchService.Actions.START.toString()
+                it.putExtra("PAUSE,", "PAUSE")
+                context.startService(it)
+            }
+            onActionChange(StopwatchService.Actions.START.toString())
+        }
+        StopwatchService.Actions.START.toString() -> {
+            Intent(context, StopwatchService::class.java).also {
+                it.action = StopwatchService.Actions.PAUSE.toString()
+                it.putExtra("RESUME,", "RESUME")
+                context.startService(it)
+            }
+            onActionChange(StopwatchService.Actions.PAUSE.toString())
+        }
     }
 }
 

@@ -2,10 +2,16 @@ package com.enriqueajin.pomidorki.presentation.permission_handling
 
 import android.Manifest
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.Settings
+import androidx.core.content.ContextCompat
 
+fun isPermissionGranted(context: Context, permission: String): Boolean {
+    return ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
+}
 
 fun Permissions.asPermissionText(): PermissionTextProvider {
     return when (this) {
