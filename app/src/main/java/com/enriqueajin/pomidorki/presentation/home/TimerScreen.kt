@@ -57,10 +57,12 @@ import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.enriqueajin.pomidorki.R
+import com.enriqueajin.pomidorki.data.countdown.CountdownTimer
 import com.enriqueajin.pomidorki.data.services.Action
 import com.enriqueajin.pomidorki.data.services.StopwatchService
 import com.enriqueajin.pomidorki.data.services.toAction
 import com.enriqueajin.pomidorki.presentation.MainActivity
+import com.enriqueajin.pomidorki.presentation.home.components.CountdownView
 import com.enriqueajin.pomidorki.presentation.home.components.PomodoroCountdown
 import com.enriqueajin.pomidorki.presentation.home.components.TimerButton
 import com.enriqueajin.pomidorki.presentation.home.components.TimerPicker
@@ -211,6 +213,9 @@ fun TimerScreen() {
             }
         }
     }
+    val countDownTimer = remember {
+        CountdownTimer(totalTimeMillis = 1_500_000L)
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Box(
@@ -279,13 +284,9 @@ fun TimerScreen() {
                         backgroundColor = MaterialTheme.colorScheme.background,
                         onPositionChange = {}
                     )
-                    Text(
-                        text = "25:00",
-                        fontSize = 82.sp,
-                        color = timerTextColor,
-                        fontFamily = FontFamily(
-                            Font(resId = R.font.bebasneue_regular)
-                        )
+                    CountdownView(
+                        formattedText = countDownTimer.formattedTime,
+                        textColor = timerTextColor,
                     )
                 }
                 Spacer(modifier = Modifier.height(35.dp))
@@ -345,10 +346,11 @@ fun TimerScreen() {
                                 permission = Manifest.permission.POST_NOTIFICATIONS
                             )
                             if (isPermissionGranted) {
-                                startStopwatchService(
+                                startCountdownTimerService(
                                     context = context,
                                     currentAction = currentStopwatchAction.toString(),
-                                    onActionChange = { currentStopwatchAction = it.toAction() }
+                                    onActionChange = { currentStopwatchAction = it.toAction() },
+                                    countdownTimer = countDownTimer,
                                 )
                             } else {
                                 postNotificationsPermissionResultLauncher.launch(
@@ -356,10 +358,11 @@ fun TimerScreen() {
                                 )
                             }
                         } else {
-                            startStopwatchService(
+                            startCountdownTimerService(
                                 context = context,
                                 currentAction = currentStopwatchAction.toString(),
-                                onActionChange = { currentStopwatchAction = it.toAction() }
+                                onActionChange = { currentStopwatchAction = it.toAction() },
+                                countdownTimer = countDownTimer,
                             )
                         }
                     },
@@ -386,24 +389,30 @@ fun TimerScreen() {
     }
 }
 
-private fun startStopwatchService(
+private fun startCountdownTimerService(
     context: Context,
     currentAction: String,
     onActionChange: (String) -> Unit,
+    countdownTimer: CountdownTimer,
 ) {
     when(currentAction) {
         Action.NONE.toString(),
         Action.PAUSE.toString() -> {
+            countdownTimer.start()
             Intent(context, StopwatchService::class.java).also {
                 it.action = Action.START.toString()
+                it.putExtra("remainingTime", countdownTimer.formattedTime)
                 it.putExtra("PAUSE,", "PAUSE")
                 context.startService(it)
             }
             onActionChange(Action.START.toString())
+
         }
         Action.START.toString() -> {
+            countdownTimer.pause()
             Intent(context, StopwatchService::class.java).also {
                 it.action = Action.PAUSE.toString()
+                it.putExtra("time", countdownTimer.formattedTime)
                 it.putExtra("RESUME,", "RESUME")
                 context.startService(it)
             }
