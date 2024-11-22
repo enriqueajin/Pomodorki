@@ -6,9 +6,12 @@
 
 <h2>Screens<h2/>
 
-| ![](https://github.com/enriqueajin/Pomodorki/raw/develop/docs/assets/counter_feat_screen1.png) | ![](https://github.com/enriqueajin/Pomodorki/raw/develop/docs/assets/counter_feat_screen2.png) | ![](https://github.com/enriqueajin/Pomodorki/raw/develop/docs/assets/counter_feat_screen2.png) |
-|-------------------------------------------------------|-------------------------------------------------------|-------------------------------------------------------|
-| ![](https://github.com/enriqueajin/Pomodorki/raw/develop/docs/assets/counter_feat_screen4.png) | ![](https://github.com/enriqueajin/Pomodorki/raw/develop/docs/assets/statistics_feat_screen1.png) | ![](https://github.com/enriqueajin/Pomodorki/raw/develop/docs/assets/statistics_feat_screen2.png) |
+| ![](https://github.com/enriqueajin/Pomodorki/raw/develop/docs/assets/counter_feat_screen1.png) | ![](https://github.com/enriqueajin/Pomodorki/raw/develop/docs/assets/counter_feat_screen2.png) | ![](https://github.com/enriqueajin/Pomodorki/raw/develop/docs/assets/counter_feat_screen3.png)|
+|-------------------------------------------------------|-------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+
+| ![](https://github.com/enriqueajin/Pomodorki/raw/develop/docs/assets/statistics_feat_screen1.png) | ![](https://github.com/enriqueajin/Pomodorki/raw/develop/docs/assets/statistics_feat_screen2.png) |
+|---------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|
+
 
 
 <details>
