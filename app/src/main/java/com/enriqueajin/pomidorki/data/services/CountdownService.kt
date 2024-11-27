@@ -1,0 +1,246 @@
+package com.enriqueajin.pomidorki.data.services
+
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.app.Service
+import android.content.Context
+import android.content.Intent
+import android.os.Binder
+import android.os.Build
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.core.app.NotificationCompat
+import com.enriqueajin.pomidorki.data.countdown.CountDownPomodoro
+import com.enriqueajin.pomidorki.data.countdown.ServiceHelper
+import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_CLOSE
+import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_PAUSE
+import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_RESET
+import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_START
+import com.enriqueajin.pomidorki.utils.Constants.CLOSE_BUTTON_TITLE
+import com.enriqueajin.pomidorki.utils.Constants.COUNTDOWN_STATE
+import com.enriqueajin.pomidorki.utils.Constants.NOTIFICATION_CHANNEL_ID
+import com.enriqueajin.pomidorki.utils.Constants.NOTIFICATION_CHANNEL_NAME
+import com.enriqueajin.pomidorki.utils.Constants.NOTIFICATION_ID
+import com.enriqueajin.pomidorki.utils.Constants.PAUSE_BUTTON_TITLE
+import com.enriqueajin.pomidorki.utils.Constants.RESET_BUTTON_TITLE
+import com.enriqueajin.pomidorki.utils.Constants.RESUME_BUTTON_TITLE
+import com.enriqueajin.pomidorki.utils.Constants.START_BUTTON_TITLE
+import com.enriqueajin.pomidorki.utils.TimeFormatter.formatTime
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
+
+@AndroidEntryPoint
+class CountdownService: Service() {
+
+    @Inject
+    lateinit var notificationBuilder: NotificationCompat.Builder
+
+    @Inject
+    lateinit var notificationManager: NotificationManager
+
+    private var countdownTimer = CountDownPomodoro(26L)
+
+    private val binder = CountdownBinder()
+
+    var currentState: CountdownState by mutableStateOf(CountdownState.Idle)
+        private set
+
+    fun getTimeLeft() = countdownTimer.timeLeft
+
+    override fun onBind(intent: Intent?) = binder
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+
+        println("action intent coming is ${intent?.getStringExtra(COUNTDOWN_STATE)}")
+
+        // When actions triggered from the notification
+        when(intent?.getStringExtra(COUNTDOWN_STATE)) {
+            CountdownState.Started.name -> {
+                startForegroundService()
+                setStartedActions()
+                startTimer { formattedTime ->
+                    updateNotification(formattedTime)
+                }
+            }
+            CountdownState.Paused.name -> {
+                setPausedActions()
+                pauseTimer()
+            }
+            CountdownState.Reset.name -> {
+                setResetActions()
+                resetTimer()
+            }
+            CountdownState.Closed.name -> {
+                resetTimer()
+                closeTimer()
+            }
+        }
+
+        println("Action coming is: ${intent?.action}")
+
+        // When actions triggered from UI
+        intent?.action.let {
+            when(it) {
+                ACTION_SERVICE_START -> {
+                    startForegroundService()
+                    setStartedActions()
+                    startTimer { formattedTime ->
+                        updateNotification(formattedTime)
+                    }
+                }
+                ACTION_SERVICE_PAUSE -> {
+                    setPausedActions()
+                    pauseTimer()
+                }
+                ACTION_SERVICE_RESET -> {
+                    setResetActions()
+                    resetTimer()
+                }
+                ACTION_SERVICE_CLOSE -> {
+                    resetTimer()
+                    closeTimer()
+                }
+            }
+        }
+        return super.onStartCommand(intent, flags, startId)
+    }
+
+    private fun startForegroundService() {
+        createNotificationChannel()
+        startForeground(NOTIFICATION_ID, notificationBuilder.build())
+    }
+
+    private fun createNotificationChannel() {
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                NOTIFICATION_CHANNEL_ID,
+                NOTIFICATION_CHANNEL_NAME,
+                NotificationManager.IMPORTANCE_HIGH
+            )
+            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
+    }
+
+    private fun startTimer(onTick: (String) -> Unit) {
+        currentState = CountdownState.Started
+        countdownTimer.start()
+        onTick(countdownTimer.timeLeft.formatTime())
+    }
+
+    private fun pauseTimer() {
+        currentState = CountdownState.Paused
+        countdownTimer.pause()
+    }
+
+    private fun resetTimer() {
+        currentState = CountdownState.Reset
+        countdownTimer.reset()
+    }
+
+    private fun closeTimer() {
+        currentState = CountdownState.Idle
+        notificationManager.cancel(NOTIFICATION_ID)
+        stopForeground(STOP_FOREGROUND_REMOVE)
+        stopSelf()
+    }
+
+    private fun setStartedActions() {
+        val actionList = listOf(
+            NotificationAction(
+                PAUSE_BUTTON_TITLE,
+                ServiceHelper.pausePendingIntent(this)
+            ),
+        )
+        addNotificationActions(
+            actionList = actionList,
+            notificationBuilder = notificationBuilder,
+            notificationManager = notificationManager
+        )
+    }
+
+    private fun setPausedActions() {
+        val actionList = listOf(
+            NotificationAction(
+                RESUME_BUTTON_TITLE,
+                ServiceHelper.resumePendingIntent(this)
+            ),
+            NotificationAction(
+                RESET_BUTTON_TITLE,
+                ServiceHelper.resetPendingIntent(this)
+            ),
+            NotificationAction(
+                CLOSE_BUTTON_TITLE,
+                ServiceHelper.cancelPendingIntent(this)
+            ),
+        )
+        addNotificationActions(
+            actionList = actionList,
+            notificationBuilder = notificationBuilder,
+            notificationManager = notificationManager
+        )
+    }
+
+    private fun setResetActions() {
+        val actionList = listOf(
+            NotificationAction(
+                START_BUTTON_TITLE,
+                ServiceHelper.startPendingIntent(this)
+            ),
+            NotificationAction(
+                CLOSE_BUTTON_TITLE,
+                ServiceHelper.cancelPendingIntent(this)
+            ),
+        )
+        addNotificationActions(
+            actionList = actionList,
+            notificationBuilder = notificationBuilder,
+            notificationManager = notificationManager
+        )
+    }
+
+    private fun updateNotification(formattedTime: String) {
+        notificationManager.notify(
+            NOTIFICATION_ID,
+            notificationBuilder.setContentText(formattedTime).build()
+        )
+    }
+
+    inner class CountdownBinder: Binder() {
+        fun getService(): CountdownService = this@CountdownService
+    }
+}
+
+data class NotificationAction(
+    val title: String,
+    val intent: PendingIntent,
+)
+
+private fun addNotificationActions(
+    actionList: List<NotificationAction>,
+    notificationBuilder: NotificationCompat.Builder,
+    notificationManager: NotificationManager
+) {
+    notificationBuilder.mActions.clear()
+    actionList.forEachIndexed { index, action ->
+        notificationBuilder.mActions.add(
+            index,
+            NotificationCompat.Action(
+                0,
+                action.title,
+                action.intent
+            )
+        )
+    }
+    notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build())
+}
+
+enum class CountdownState {
+    Idle,
+    Started,
+    Paused,
+    Reset,
+    Closed
+}

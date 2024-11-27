@@ -2,7 +2,6 @@ package com.enriqueajin.pomidorki.presentation.home
 
 import android.Manifest
 import android.content.Context
-import android.content.Intent
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -57,10 +56,10 @@ import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.enriqueajin.pomidorki.R
-import com.enriqueajin.pomidorki.data.countdown.CountdownTimer
+import com.enriqueajin.pomidorki.data.countdown.ServiceHelper
 import com.enriqueajin.pomidorki.data.services.Action
-import com.enriqueajin.pomidorki.data.services.StopwatchService
-import com.enriqueajin.pomidorki.data.services.toAction
+import com.enriqueajin.pomidorki.data.services.CountdownService
+import com.enriqueajin.pomidorki.data.services.CountdownState
 import com.enriqueajin.pomidorki.presentation.MainActivity
 import com.enriqueajin.pomidorki.presentation.home.components.CountdownView
 import com.enriqueajin.pomidorki.presentation.home.components.PomodoroCountdown
@@ -88,10 +87,27 @@ import com.enriqueajin.pomidorki.presentation.ui.theme.shortBreakBackground
 import com.enriqueajin.pomidorki.presentation.ui.theme.shortBreakPickerContainer
 import com.enriqueajin.pomidorki.presentation.ui.theme.shortBreakPickerIndicator
 import com.enriqueajin.pomidorki.presentation.ui.theme.shortBreakTimerText
+import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_PAUSE
+import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_START
 import com.enriqueajin.pomidorki.utils.Constants.pomodoroTabItems
+import com.enriqueajin.pomidorki.utils.TimeFormatter.formatTime
 
 @Composable
-fun TimerScreen() {
+fun TimerScreenRoot(
+    timerScreenViewModel: TimerScreenViewModel = hiltViewModel(),
+    countDownService: CountdownService
+) {
+    TimerScreen(
+        event = timerScreenViewModel::onEvent,
+        countDownService = countDownService
+    )
+}
+
+@Composable
+fun TimerScreen(
+    event: (TimerScreenEvent) -> Unit,
+    countDownService: CountdownService,
+) {
     val context = LocalContext.current
     var selected by rememberSaveable {
         mutableIntStateOf(0)
@@ -180,41 +196,15 @@ fun TimerScreen() {
     var currentStopwatchAction by remember {
         mutableStateOf(Action.NONE)
     }
-    val buttonText by remember(currentStopwatchAction) {
-        derivedStateOf {
-            when(currentStopwatchAction) {
-                Action.NONE -> "Start"
-                Action.START -> "Pause"
-                Action.PAUSE -> "Resume"
-                Action.RESUME -> "Pause"
-                else -> "Start"
-            }
-        }
+    val buttonText = when (countDownService.currentState) {
+        CountdownState.Started -> "Pause"
+        CountdownState.Paused -> "Resume"
+        else -> "Start"
     }
-    val buttonIconId by remember(currentStopwatchAction) {
-        derivedStateOf {
-            when(currentStopwatchAction) {
-                Action.NONE -> R.drawable.ic_play
-                Action.START -> R.drawable.ic_pause
-                Action.PAUSE -> R.drawable.ic_play
-                Action.RESUME -> R.drawable.ic_pause
-                else -> R.drawable.ic_play
-            }
-        }
-    }
-    val buttonColor by remember(currentStopwatchAction) {
-        derivedStateOf {
-            when(currentStopwatchAction) {
-                Action.NONE -> greenPomodoro
-                Action.START -> darkPink
-                Action.PAUSE -> greenPomodoro
-                Action.RESUME -> darkPink
-                else -> greenPomodoro
-            }
-        }
-    }
-    val countDownTimer = remember {
-        CountdownTimer(totalTimeMillis = 1_500_000L)
+    val buttonIconId = when (countDownService.currentState) {
+        CountdownState.Started -> R.drawable.ic_pause
+        CountdownState.Paused -> R.drawable.ic_play
+        else -> R.drawable.ic_play
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -285,7 +275,7 @@ fun TimerScreen() {
                         onPositionChange = {}
                     )
                     CountdownView(
-                        formattedText = countDownTimer.formattedTime,
+                        formattedText = countDownService.getTimeLeft().formatTime(),
                         textColor = timerTextColor,
                     )
                 }
@@ -338,7 +328,7 @@ fun TimerScreen() {
                 TimerButton(
                     text = buttonText,
                     icon = ImageVector.vectorResource(buttonIconId),
-                    containerColor = buttonColor,
+                    containerColor = if (countDownService.currentState == CountdownState.Started) darkPink else greenPomodoro,
                     onClick = {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                             val isPermissionGranted = isPermissionGranted(
@@ -348,21 +338,18 @@ fun TimerScreen() {
                             if (isPermissionGranted) {
                                 startCountdownTimerService(
                                     context = context,
-                                    currentAction = currentStopwatchAction.toString(),
-                                    onActionChange = { currentStopwatchAction = it.toAction() },
-                                    countdownTimer = countDownTimer,
+                                    currentState = countDownService.currentState,
                                 )
                             } else {
                                 postNotificationsPermissionResultLauncher.launch(
                                     Manifest.permission.POST_NOTIFICATIONS
                                 )
                             }
+
                         } else {
                             startCountdownTimerService(
                                 context = context,
-                                currentAction = currentStopwatchAction.toString(),
-                                onActionChange = { currentStopwatchAction = it.toAction() },
-                                countdownTimer = countDownTimer,
+                                currentState = countDownService.currentState,
                             )
                         }
                     },
@@ -391,38 +378,17 @@ fun TimerScreen() {
 
 private fun startCountdownTimerService(
     context: Context,
-    currentAction: String,
-    onActionChange: (String) -> Unit,
-    countdownTimer: CountdownTimer,
+    currentState: CountdownState,
 ) {
-    when(currentAction) {
-        Action.NONE.toString(),
-        Action.PAUSE.toString() -> {
-            countdownTimer.start()
-            Intent(context, StopwatchService::class.java).also {
-                it.action = Action.START.toString()
-                it.putExtra("remainingTime", countdownTimer.formattedTime)
-                it.putExtra("PAUSE,", "PAUSE")
-                context.startService(it)
-            }
-            onActionChange(Action.START.toString())
-
-        }
-        Action.START.toString() -> {
-            countdownTimer.pause()
-            Intent(context, StopwatchService::class.java).also {
-                it.action = Action.PAUSE.toString()
-                it.putExtra("time", countdownTimer.formattedTime)
-                it.putExtra("RESUME,", "RESUME")
-                context.startService(it)
-            }
-            onActionChange(Action.PAUSE.toString())
-        }
-    }
+    ServiceHelper.triggerForegroundService(
+        context = context,
+        action = if (currentState == CountdownState.Started) ACTION_SERVICE_PAUSE
+        else ACTION_SERVICE_START
+    )
 }
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun TimerScreenPreview() {
-    TimerScreen()
+//    TimerScreen()
 }

@@ -35,7 +35,8 @@
             </intent-filter>
         </activity>
         <service
-            android:name=".data.services.StopwatchService"
+            android:name=".data.services.CountdownService"
+            android:enabled="true"
             android:foregroundServiceType="specialUse" />
     </application>
 </manifest>
