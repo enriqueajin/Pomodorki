@@ -2,22 +2,38 @@ package com.enriqueajin.pomidorki.presentation.home
 
 import android.content.Context
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.enriqueajin.pomidorki.data.countdown.ServiceHelper
+import com.enriqueajin.pomidorki.domain.repository.TimerServiceRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
 @HiltViewModel
 class TimerScreenViewModel @Inject constructor(
-//    @ApplicationContext var countdownService: CountdownService
+    private val timerServiceRepository: TimerServiceRepository
 ): ViewModel() {
 
-//    private val _remainingTime = MutableStateFlow(countdownService.remainingTime)
-//    val remainingTime: StateFlow<String> = _remainingTime.asStateFlow()
+    init {
+        timerServiceRepository.bindTimerService()
+    }
 
-    private val _state = MutableStateFlow(TimerScreenState())
-    val state = _state.asStateFlow()
+    val uiState: StateFlow<TimerScreenState> = combine(
+        timerServiceRepository.getCurrentStatus(),
+        timerServiceRepository.getTimeLeft()
+    ) { currentState, timeLeft ->
+        TimerScreenState(
+            currentState = currentState,
+            timeLeft = timeLeft
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = TimerScreenState()
+    )
 
     fun onEvent(event: TimerScreenEvent) {
         when(event) {
@@ -27,5 +43,10 @@ class TimerScreenViewModel @Inject constructor(
 
     private fun triggerPomodoro(context: Context, action: String) {
         ServiceHelper.triggerForegroundService(context, action)
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        timerServiceRepository.unbindTimerService()
     }
 }

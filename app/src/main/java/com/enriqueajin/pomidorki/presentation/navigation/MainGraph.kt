@@ -13,14 +13,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.enriqueajin.pomidorki.data.services.CountdownService
 import com.enriqueajin.pomidorki.presentation.home.TimerScreenRoot
 import com.enriqueajin.pomidorki.presentation.stats.StatsScreen
 import com.enriqueajin.pomidorki.presentation.tasks.TasksScreen
 import com.enriqueajin.pomidorki.utils.Constants
 
 @Composable
-fun MainGraph(countDownService: CountdownService) {
+fun MainGraph() {
 
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -50,7 +49,7 @@ fun MainGraph(countDownService: CountdownService) {
             modifier = Modifier.padding(innerPadding)
         ) {
             composable<Route.Timer> {
-                TimerScreenRoot(countDownService = countDownService)
+                TimerScreenRoot()
             }
             composable<Route.Tasks> {
                 TasksScreen()

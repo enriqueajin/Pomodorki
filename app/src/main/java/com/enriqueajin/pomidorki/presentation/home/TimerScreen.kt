@@ -55,10 +55,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.enriqueajin.pomidorki.R
 import com.enriqueajin.pomidorki.data.countdown.ServiceHelper
 import com.enriqueajin.pomidorki.data.services.Action
-import com.enriqueajin.pomidorki.data.services.CountdownService
 import com.enriqueajin.pomidorki.data.services.CountdownState
 import com.enriqueajin.pomidorki.presentation.MainActivity
 import com.enriqueajin.pomidorki.presentation.home.components.CountdownView
@@ -95,18 +95,19 @@ import com.enriqueajin.pomidorki.utils.TimeFormatter.formatTime
 @Composable
 fun TimerScreenRoot(
     timerScreenViewModel: TimerScreenViewModel = hiltViewModel(),
-    countDownService: CountdownService
 ) {
+    val uiState by timerScreenViewModel.uiState.collectAsStateWithLifecycle()
+
     TimerScreen(
         event = timerScreenViewModel::onEvent,
-        countDownService = countDownService
+        uiState = uiState
     )
 }
 
 @Composable
 fun TimerScreen(
     event: (TimerScreenEvent) -> Unit,
-    countDownService: CountdownService,
+    uiState: TimerScreenState,
 ) {
     val context = LocalContext.current
     var selected by rememberSaveable {
@@ -196,12 +197,12 @@ fun TimerScreen(
     var currentStopwatchAction by remember {
         mutableStateOf(Action.NONE)
     }
-    val buttonText = when (countDownService.currentState) {
+    val buttonText = when (uiState.currentState) {
         CountdownState.Started -> "Pause"
         CountdownState.Paused -> "Resume"
         else -> "Start"
     }
-    val buttonIconId = when (countDownService.currentState) {
+    val buttonIconId = when (uiState.currentState) {
         CountdownState.Started -> R.drawable.ic_pause
         CountdownState.Paused -> R.drawable.ic_play
         else -> R.drawable.ic_play
@@ -275,7 +276,7 @@ fun TimerScreen(
                         onPositionChange = {}
                     )
                     CountdownView(
-                        formattedText = countDownService.getTimeLeft().formatTime(),
+                        formattedText = uiState.timeLeft?.formatTime() ?: "25:00",
                         textColor = timerTextColor,
                     )
                 }
@@ -328,7 +329,7 @@ fun TimerScreen(
                 TimerButton(
                     text = buttonText,
                     icon = ImageVector.vectorResource(buttonIconId),
-                    containerColor = if (countDownService.currentState == CountdownState.Started) darkPink else greenPomodoro,
+                    containerColor = if (uiState.currentState == CountdownState.Started) darkPink else greenPomodoro,
                     onClick = {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                             val isPermissionGranted = isPermissionGranted(
@@ -338,7 +339,7 @@ fun TimerScreen(
                             if (isPermissionGranted) {
                                 startCountdownTimerService(
                                     context = context,
-                                    currentState = countDownService.currentState,
+                                    currentState = uiState.currentState,
                                 )
                             } else {
                                 postNotificationsPermissionResultLauncher.launch(
@@ -349,7 +350,7 @@ fun TimerScreen(
                         } else {
                             startCountdownTimerService(
                                 context = context,
-                                currentState = countDownService.currentState,
+                                currentState = uiState.currentState,
                             )
                         }
                     },
@@ -378,7 +379,7 @@ fun TimerScreen(
 
 private fun startCountdownTimerService(
     context: Context,
-    currentState: CountdownState,
+    currentState: CountdownState?,
 ) {
     ServiceHelper.triggerForegroundService(
         context = context,

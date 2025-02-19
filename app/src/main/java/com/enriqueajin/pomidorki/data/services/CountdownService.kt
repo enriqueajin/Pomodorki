@@ -8,9 +8,6 @@ import android.content.Context
 import android.content.Intent
 import android.os.Binder
 import android.os.Build
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.core.app.NotificationCompat
 import com.enriqueajin.pomidorki.data.countdown.CountDownPomodoro
 import com.enriqueajin.pomidorki.data.countdown.ServiceHelper
@@ -29,6 +26,9 @@ import com.enriqueajin.pomidorki.utils.Constants.RESUME_BUTTON_TITLE
 import com.enriqueajin.pomidorki.utils.Constants.START_BUTTON_TITLE
 import com.enriqueajin.pomidorki.utils.TimeFormatter.formatTime
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -44,10 +44,8 @@ class CountdownService: Service() {
 
     private val binder = CountdownBinder()
 
-    var currentState: CountdownState by mutableStateOf(CountdownState.Idle)
-        private set
-
-    fun getTimeLeft() = countdownTimer.timeLeft
+    private val _currentState: MutableStateFlow<CountdownState> = MutableStateFlow(CountdownState.Idle)
+    val currentState = _currentState.asStateFlow()
 
     override fun onBind(intent: Intent?) = binder
 
@@ -125,23 +123,23 @@ class CountdownService: Service() {
     }
 
     private fun startTimer(onTick: (String) -> Unit) {
-        currentState = CountdownState.Started
+        _currentState.value = CountdownState.Started
         countdownTimer.start()
-        onTick(countdownTimer.timeLeft.formatTime())
+        onTick(countdownTimer.timeLeft.value.formatTime())
     }
 
     private fun pauseTimer() {
-        currentState = CountdownState.Paused
+        _currentState.value = CountdownState.Paused
         countdownTimer.pause()
     }
 
     private fun resetTimer() {
-        currentState = CountdownState.Reset
+        _currentState.value = CountdownState.Reset
         countdownTimer.reset()
     }
 
     private fun closeTimer() {
-        currentState = CountdownState.Idle
+        _currentState.value = CountdownState.Idle
         notificationManager.cancel(NOTIFICATION_ID)
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
@@ -207,6 +205,8 @@ class CountdownService: Service() {
             notificationBuilder.setContentText(formattedTime).build()
         )
     }
+
+    fun getTimeLeft(): StateFlow<Long> = countdownTimer.timeLeft
 
     inner class CountdownBinder: Binder() {
         fun getService(): CountdownService = this@CountdownService

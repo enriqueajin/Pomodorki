@@ -4,5 +4,5 @@ import com.enriqueajin.pomidorki.data.services.CountdownState
 
 data class TimerScreenState(
     val currentState: CountdownState? = null,
-    val formattedTime: String? = null,
+    val timeLeft: Long? = null,
 )
