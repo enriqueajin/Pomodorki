@@ -26,9 +26,13 @@ import com.enriqueajin.pomidorki.utils.Constants.RESUME_BUTTON_TITLE
 import com.enriqueajin.pomidorki.utils.Constants.START_BUTTON_TITLE
 import com.enriqueajin.pomidorki.utils.TimeFormatter.formatTime
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -47,59 +51,40 @@ class CountdownService: Service() {
     private val _currentState: MutableStateFlow<CountdownState> = MutableStateFlow(CountdownState.Idle)
     val currentState = _currentState.asStateFlow()
 
+    private val coroutineScope = CoroutineScope(Dispatchers.IO)
+
     override fun onBind(intent: Intent?) = binder
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 
         println("action intent coming is ${intent?.getStringExtra(COUNTDOWN_STATE)}")
 
-        // When actions triggered from the notification
-        when(intent?.getStringExtra(COUNTDOWN_STATE)) {
-            CountdownState.Started.name -> {
+        val action =
+            intent?.action ?: // when triggered by the UI
+            intent?.getStringExtra(COUNTDOWN_STATE) // When trigger by the notification
+
+        when(action) {
+            CountdownState.Started.name, ACTION_SERVICE_START -> {
                 startForegroundService()
                 setStartedActions()
-                startTimer { formattedTime ->
-                    updateNotification(formattedTime)
+                startTimer()
+                coroutineScope.launch {
+                    countdownTimer.timeLeft.collect { timeLeft ->
+                        updateNotification(timeLeft)
+                    }
                 }
             }
-            CountdownState.Paused.name -> {
+            CountdownState.Paused.name, ACTION_SERVICE_PAUSE -> {
                 setPausedActions()
                 pauseTimer()
             }
-            CountdownState.Reset.name -> {
+            CountdownState.Reset.name, ACTION_SERVICE_RESET -> {
                 setResetActions()
                 resetTimer()
             }
-            CountdownState.Closed.name -> {
+            CountdownState.Closed.name, ACTION_SERVICE_CLOSE -> {
                 resetTimer()
                 closeTimer()
-            }
-        }
-
-        println("Action coming is: ${intent?.action}")
-
-        // When actions triggered from UI
-        intent?.action.let {
-            when(it) {
-                ACTION_SERVICE_START -> {
-                    startForegroundService()
-                    setStartedActions()
-                    startTimer { formattedTime ->
-                        updateNotification(formattedTime)
-                    }
-                }
-                ACTION_SERVICE_PAUSE -> {
-                    setPausedActions()
-                    pauseTimer()
-                }
-                ACTION_SERVICE_RESET -> {
-                    setResetActions()
-                    resetTimer()
-                }
-                ACTION_SERVICE_CLOSE -> {
-                    resetTimer()
-                    closeTimer()
-                }
             }
         }
         return super.onStartCommand(intent, flags, startId)
@@ -122,10 +107,9 @@ class CountdownService: Service() {
         }
     }
 
-    private fun startTimer(onTick: (String) -> Unit) {
+    private fun startTimer() {
         _currentState.value = CountdownState.Started
         countdownTimer.start()
-        onTick(countdownTimer.timeLeft.value.formatTime())
     }
 
     private fun pauseTimer() {
@@ -199,14 +183,21 @@ class CountdownService: Service() {
         )
     }
 
-    private fun updateNotification(formattedTime: String) {
+    private fun updateNotification(timeLeft: Long) {
         notificationManager.notify(
             NOTIFICATION_ID,
-            notificationBuilder.setContentText(formattedTime).build()
+            notificationBuilder.setContentText(
+                timeLeft.formatTime()
+            ).build()
         )
     }
 
     fun getTimeLeft(): StateFlow<Long> = countdownTimer.timeLeft
+
+    override fun onDestroy() {
+        super.onDestroy()
+        coroutineScope.cancel()
+    }
 
     inner class CountdownBinder: Binder() {
         fun getService(): CountdownService = this@CountdownService
