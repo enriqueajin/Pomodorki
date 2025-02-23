@@ -40,6 +40,7 @@ object Constants {
     const val ACTION_SERVICE_PAUSE = "ACTION_SERVICE_PAUSE"
     const val ACTION_SERVICE_RESET = "ACTION_SERVICE_RESET"
     const val ACTION_SERVICE_CLOSE = "ACTION_SERVICE_CLOSE"
+    const val ACTION_SERVICE_IDLE = "ACTION_SERVICE_IDLE"
 
     const val COUNTDOWN_STATE = "COUNTDOWN_STATE"
     const val NOTIFICATION_CHANNEL_ID = "NOTIFICATION_CHANNEL_ID"
@@ -53,6 +54,7 @@ object Constants {
     const val CANCEL_REQUEST_CODE = 103
     const val START_REQUEST_CODE = 107
     const val RESET_REQUEST_CODE = 106
+    const val IDLE_REQUEST_CODE = 110
 
     // Notification action buttons' title
     const val START_BUTTON_TITLE = "START"

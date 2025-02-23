@@ -12,6 +12,7 @@ import androidx.core.app.NotificationCompat
 import com.enriqueajin.pomidorki.data.countdown.CountDownPomodoro
 import com.enriqueajin.pomidorki.data.countdown.ServiceHelper
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_CLOSE
+import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_IDLE
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_PAUSE
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_RESET
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_START
@@ -44,7 +45,7 @@ class CountdownService: Service() {
     @Inject
     lateinit var notificationManager: NotificationManager
 
-    private var countdownTimer = CountDownPomodoro(26L)
+    private var countdownTimer = CountDownPomodoro(totalMinutes = 26L, context = this)
 
     private val binder = CountdownBinder()
 
@@ -57,11 +58,13 @@ class CountdownService: Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 
-        println("action intent coming is ${intent?.getStringExtra(COUNTDOWN_STATE)}")
 
         val action =
             intent?.action ?: // when triggered by the UI
             intent?.getStringExtra(COUNTDOWN_STATE) // When trigger by the notification
+
+        println("Intent: ${intent?.action}")
+        println("Intent: ${intent?.getStringExtra(COUNTDOWN_STATE)}")
 
         when(action) {
             CountdownState.Started.name, ACTION_SERVICE_START -> {
@@ -85,6 +88,9 @@ class CountdownService: Service() {
             CountdownState.Closed.name, ACTION_SERVICE_CLOSE -> {
                 resetTimer()
                 closeTimer()
+            }
+            CountdownState.Idle.name, ACTION_SERVICE_IDLE -> {
+                _currentState.value = CountdownState.Idle
             }
         }
         return super.onStartCommand(intent, flags, startId)

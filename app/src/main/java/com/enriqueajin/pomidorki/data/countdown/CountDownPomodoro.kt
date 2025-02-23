@@ -1,14 +1,19 @@
 package com.enriqueajin.pomidorki.data.countdown
 
+import android.content.Context
 import android.os.CountDownTimer
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_IDLE
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import java.util.concurrent.TimeUnit
 
-class CountDownPomodoro(private val totalMinutes: Long) {
+class CountDownPomodoro(
+    private val totalMinutes: Long,
+    private val context: Context
+) {
 
     private var countDownTimer: CountDownTimer? = null
     private val initialMillis = TimeUnit.MINUTES.toMillis(totalMinutes)
@@ -28,7 +33,8 @@ class CountDownPomodoro(private val totalMinutes: Long) {
             }
 
             override fun onFinish() {
-                _timeLeft.value = 0
+                ServiceHelper.triggerForegroundService(context, ACTION_SERVICE_IDLE)
+                _timeLeft.value = initialMillis
                 isActive = false
             }
         }.start()
