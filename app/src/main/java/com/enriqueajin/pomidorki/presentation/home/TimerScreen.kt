@@ -428,5 +428,8 @@ private fun startCountdownTimerService(
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun TimerScreenPreview() {
-//    TimerScreen()
+    TimerScreen(
+        event = {},
+        uiState = TimerScreenState()
+    )
 }
