@@ -268,7 +268,8 @@ fun TimerScreen(
                         modifier = Modifier
                             .size(197.dp)
                             .background(pinkPrimary),
-                        initialValue = 67,
+                        initialValue = 0,
+                        timeLeftMillis = uiState.timeLeft ?: 0L,
                         arcColor = timerArcColor,
                         timeElapsedArcColor = timeElapsedArcColor,
                         circleRadius = 340f,

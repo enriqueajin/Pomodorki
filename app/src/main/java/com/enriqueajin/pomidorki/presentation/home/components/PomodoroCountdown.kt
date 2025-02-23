@@ -1,5 +1,7 @@
 package com.enriqueajin.pomidorki.presentation.home.components
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -7,8 +9,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -28,6 +32,7 @@ import com.enriqueajin.pomidorki.presentation.ui.theme.pinkSecondary
 fun PomodoroCountdown(
     modifier: Modifier,
     initialValue: Int,
+    timeLeftMillis: Long,
     arcColor: Color,
     timeElapsedArcColor: Color,
     minValue: Int = 0,
@@ -37,7 +42,20 @@ fun PomodoroCountdown(
     onPositionChange: (Int) -> Unit,
 ) {
     var circleCenter by remember { mutableStateOf(Offset.Zero) }
-    var positionValue by remember { mutableIntStateOf(initialValue) }
+    val maxTime by remember { mutableLongStateOf(26 * 60 * 1000) }
+    var percentage by remember { mutableFloatStateOf(0f) }
+
+    val cuPercentage = animateFloatAsState(
+        targetValue = percentage,
+        animationSpec = tween(
+            durationMillis = 500,
+            delayMillis = 0
+        ), label = ""
+    )
+
+    LaunchedEffect(timeLeftMillis) {
+         percentage = calculatePercentage(timeLeftMillis, maxTime)
+    }
 
     Box(
         modifier = modifier,
@@ -82,7 +100,7 @@ fun PomodoroCountdown(
             drawArc(
                 color = arcColor,
                 startAngle = -90f,
-                sweepAngle = (360f / maxValue) * positionValue.toFloat(),
+                sweepAngle = (360f / maxValue) * cuPercentage.value,
                 style = Stroke(
                     width = circleThickness,
                     cap = StrokeCap.Round
@@ -101,6 +119,10 @@ fun PomodoroCountdown(
     }
 }
 
+fun calculatePercentage(currentTime: Long, maxTime: Long): Float {
+    return ((currentTime.toFloat() / maxTime.toFloat()) * 100)
+}
+
 @Preview(showBackground = true)
 @Composable
 fun PomodoroCountdownPreview() {
@@ -109,6 +131,7 @@ fun PomodoroCountdownPreview() {
             .size(300.dp)
             .background(pinkPrimary),
         initialValue = 67,
+        timeLeftMillis = 0L,
         arcColor = pinkSecondary,
         timeElapsedArcColor = Color.LightGray,
         circleRadius = 340f,
