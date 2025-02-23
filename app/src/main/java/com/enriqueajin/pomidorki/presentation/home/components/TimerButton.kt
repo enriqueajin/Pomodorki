@@ -27,13 +27,14 @@ import com.enriqueajin.pomidorki.presentation.ui.theme.greenPomodoro
 
 @Composable
 fun TimerButton(
+    modifier: Modifier = Modifier,
     text: String,
     icon: ImageVector,
     containerColor: Color,
     onClick: () -> Unit,
 ) {
     Button(
-        modifier = Modifier
+        modifier = modifier
             .width(160.dp)
             .height(45.dp),
         onClick = onClick,
@@ -43,13 +44,13 @@ fun TimerButton(
         )
     ) {
         Row(
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
-                modifier = Modifier
+                modifier = modifier
                     .size(35.dp),
                 imageVector = icon,
                 contentDescription = null

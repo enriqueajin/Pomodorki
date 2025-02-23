@@ -74,6 +74,7 @@ dependencies {
     implementation(libs.navigation.compose)
     implementation(libs.hilt.navigation)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.constraint.layout)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
@@ -55,6 +56,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -326,35 +328,63 @@ fun TimerScreen(
                     )
                 )
                 Spacer(modifier = Modifier.height(30.dp))
-                TimerButton(
-                    text = buttonText,
-                    icon = ImageVector.vectorResource(buttonIconId),
-                    containerColor = if (uiState.currentState == CountdownState.Started) darkPink else greenPomodoro,
-                    onClick = {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            val isPermissionGranted = isPermissionGranted(
-                                context = context,
-                                permission = Manifest.permission.POST_NOTIFICATIONS
-                            )
-                            if (isPermissionGranted) {
+                ConstraintLayout(modifier = Modifier.fillMaxWidth()) {
+                    val (mainButton, resetIcon) = createRefs()
+
+                    TimerButton(
+                        modifier = Modifier
+                            .constrainAs(mainButton) {
+                                start.linkTo(parent.start)
+                                end.linkTo(parent.end)
+                            },
+                        text = buttonText,
+                        icon = ImageVector.vectorResource(buttonIconId),
+                        containerColor = if (uiState.currentState == CountdownState.Started) darkPink else greenPomodoro,
+                        onClick = {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                val isPermissionGranted = isPermissionGranted(
+                                    context = context,
+                                    permission = Manifest.permission.POST_NOTIFICATIONS
+                                )
+                                if (isPermissionGranted) {
+                                    startCountdownTimerService(
+                                        context = context,
+                                        currentState = uiState.currentState,
+                                    )
+                                } else {
+                                    postNotificationsPermissionResultLauncher.launch(
+                                        Manifest.permission.POST_NOTIFICATIONS
+                                    )
+                                }
+
+                            } else {
                                 startCountdownTimerService(
                                     context = context,
                                     currentState = uiState.currentState,
                                 )
-                            } else {
-                                postNotificationsPermissionResultLauncher.launch(
-                                    Manifest.permission.POST_NOTIFICATIONS
-                                )
                             }
-
-                        } else {
-                            startCountdownTimerService(
-                                context = context,
-                                currentState = uiState.currentState,
+                        },
+                    )
+                    if(uiState.currentState == CountdownState.Paused) {
+                        IconButton(
+                            modifier = Modifier
+                                .constrainAs(resetIcon) {
+                                    start.linkTo(mainButton.end)
+                                },
+                            onClick = {
+                                ServiceHelper.triggerForegroundService(
+                                    context = context,
+                                    action = ACTION_SERVICE_CLOSE
+                                )
+                            }) {
+                            Icon(
+                                modifier = Modifier.size(32.dp),
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = null
                             )
                         }
-                    },
-                )
+                    }
+                }
                 Spacer(modifier = Modifier.height(30.dp))
             }
         }
