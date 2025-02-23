@@ -60,7 +60,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.enriqueajin.pomidorki.R
 import com.enriqueajin.pomidorki.data.countdown.ServiceHelper
-import com.enriqueajin.pomidorki.data.services.Action
 import com.enriqueajin.pomidorki.data.services.CountdownState
 import com.enriqueajin.pomidorki.presentation.MainActivity
 import com.enriqueajin.pomidorki.presentation.home.components.CountdownView
@@ -89,6 +88,7 @@ import com.enriqueajin.pomidorki.presentation.ui.theme.shortBreakBackground
 import com.enriqueajin.pomidorki.presentation.ui.theme.shortBreakPickerContainer
 import com.enriqueajin.pomidorki.presentation.ui.theme.shortBreakPickerIndicator
 import com.enriqueajin.pomidorki.presentation.ui.theme.shortBreakTimerText
+import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_CLOSE
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_PAUSE
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_START
 import com.enriqueajin.pomidorki.utils.Constants.pomodoroTabItems
@@ -174,14 +174,8 @@ fun TimerScreen(
     } else {
         lightThemeTimerTextColor
     }
-
     val permissionViewModel: PermissionHandlingViewModel = hiltViewModel()
     val dialogQueue = permissionViewModel.visiblePermissionDialogQueue
-
-    val permissionsToRequest = arrayOf(
-        Manifest.permission.RECORD_AUDIO,
-        Manifest.permission.CALL_PHONE,
-    )
 
     val postNotificationsPermissionResultLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
@@ -194,10 +188,6 @@ fun TimerScreen(
             }
         }
     )
-
-    var currentStopwatchAction by remember {
-        mutableStateOf(Action.NONE)
-    }
     val buttonText = when (uiState.currentState) {
         CountdownState.Started -> "Pause"
         CountdownState.Paused -> "Resume"
@@ -390,9 +380,13 @@ fun TimerScreen(
                 confirmButton = {
                     TextButton(
                         onClick = {
+                            // Cancel pomodoro & stop foreground service
+                            ServiceHelper.triggerForegroundService(
+                                context = context,
+                                action = ACTION_SERVICE_CLOSE
+                            )
                             selected = tabToConfirm
                             isDialogOpen = false
-
                         },
                         content = {
                             Text(text = stringResource(R.string.dialog_yes_button))
