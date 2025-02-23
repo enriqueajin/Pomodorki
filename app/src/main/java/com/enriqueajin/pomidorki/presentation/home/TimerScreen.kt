@@ -24,12 +24,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -110,9 +112,8 @@ fun TimerScreen(
     uiState: TimerScreenState,
 ) {
     val context = LocalContext.current
-    var selected by rememberSaveable {
-        mutableIntStateOf(0)
-    }
+    var selected by rememberSaveable { mutableIntStateOf(0) }
+    var tabToConfirm by rememberSaveable { mutableIntStateOf(0) }
     val backgroundColor by remember(selected) {
         derivedStateOf {
             when (selected) {
@@ -207,6 +208,7 @@ fun TimerScreen(
         CountdownState.Paused -> R.drawable.ic_play
         else -> R.drawable.ic_play
     }
+    var isDialogOpen by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Box(
@@ -245,7 +247,14 @@ fun TimerScreen(
                     items = pomodoroTabItems,
                     containerColor = containerColor,
                     indicatorColor = indicatorColor,
-                    onTabSelected = { index -> selected = index }
+                    onTabSelected = { index ->
+                        if (uiState.currentState != CountdownState.Started) {
+                            selected = index
+                        } else {
+                            tabToConfirm = index
+                            isDialogOpen = true
+                        }
+                    }
                 )
             }
             Column(
@@ -375,6 +384,39 @@ fun TimerScreen(
                     onGoToAppSettingsClick = { context.openAppSettings() }
                 )
             }
+        if (isDialogOpen) {
+            AlertDialog(
+                onDismissRequest = { isDialogOpen = false },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            selected = tabToConfirm
+                            isDialogOpen = false
+
+                        },
+                        content = {
+                            Text(text = stringResource(R.string.dialog_yes_button))
+                        }
+                    )
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = {
+                            isDialogOpen = false
+                        },
+                        content = {
+                            Text(text = stringResource(R.string.dialog_no_button))
+                        }
+                    )
+                },
+                title = {
+                    Text(text = stringResource(R.string.dialog_confirm_title) )
+                },
+                text = {
+                    Text(text = stringResource(R.string.dialog_confirm_text))
+                },
+            )
+        }
     }
 }
 
