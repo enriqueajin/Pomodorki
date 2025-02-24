@@ -92,6 +92,7 @@ import com.enriqueajin.pomidorki.presentation.ui.theme.shortBreakPickerIndicator
 import com.enriqueajin.pomidorki.presentation.ui.theme.shortBreakTimerText
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_CLOSE
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_PAUSE
+import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_RESET
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_START
 import com.enriqueajin.pomidorki.utils.Constants.pomodoroTabItems
 import com.enriqueajin.pomidorki.utils.TimeFormatter.formatTime
@@ -372,10 +373,7 @@ fun TimerScreen(
                                     start.linkTo(mainButton.end)
                                 },
                             onClick = {
-                                ServiceHelper.triggerForegroundService(
-                                    context = context,
-                                    action = ACTION_SERVICE_CLOSE
-                                )
+                                isDialogOpen = true
                             }) {
                             Icon(
                                 modifier = Modifier.size(32.dp),
@@ -410,12 +408,17 @@ fun TimerScreen(
                 confirmButton = {
                     TextButton(
                         onClick = {
-                            // Cancel pomodoro & stop foreground service
+                            val action = if(uiState.currentState == CountdownState.Started) {
+                                selected = tabToConfirm
+                                ACTION_SERVICE_CLOSE
+                            } else {
+                                ACTION_SERVICE_RESET
+                            }
+
                             ServiceHelper.triggerForegroundService(
                                 context = context,
-                                action = ACTION_SERVICE_CLOSE
+                                action = action
                             )
-                            selected = tabToConfirm
                             isDialogOpen = false
                         },
                         content = {
@@ -434,10 +437,20 @@ fun TimerScreen(
                     )
                 },
                 title = {
-                    Text(text = stringResource(R.string.dialog_confirm_title) )
+                    val title = if(uiState.currentState == CountdownState.Started) {
+                        R.string.dialog_cancel_title
+                    } else {
+                        R.string.dialog_reset_title
+                    }
+                    Text(text = stringResource(title) )
                 },
                 text = {
-                    Text(text = stringResource(R.string.dialog_confirm_text))
+                    val description = if(uiState.currentState == CountdownState.Started) {
+                        R.string.dialog_cancel_text
+                    } else {
+                        R.string.dialog_reset_text
+                    }
+                    Text(text = stringResource(description))
                 },
             )
         }
