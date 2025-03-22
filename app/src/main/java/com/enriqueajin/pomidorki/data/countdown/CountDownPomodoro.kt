@@ -6,8 +6,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_IDLE
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 
 class CountDownPomodoro(
@@ -33,9 +37,15 @@ class CountDownPomodoro(
             }
 
             override fun onFinish() {
+                _timeLeft.value = 0L
                 ServiceHelper.triggerForegroundService(context, ACTION_SERVICE_IDLE)
-                _timeLeft.value = initialMillis
-                isActive = false
+
+                // Delay to make sure that timeLeft = 0 first, and then reset to initialMillis
+                CoroutineScope(Dispatchers.Main).launch {
+                    delay(100L)
+                    _timeLeft.value = initialMillis
+                    isActive = false
+                }
             }
         }.start()
     }

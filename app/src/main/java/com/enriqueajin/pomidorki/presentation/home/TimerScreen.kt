@@ -34,6 +34,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -117,34 +118,28 @@ fun TimerScreen(
     val context = LocalContext.current
     var selected by rememberSaveable { mutableIntStateOf(0) }
     var tabToConfirm by rememberSaveable { mutableIntStateOf(0) }
-    val backgroundColor by remember(selected) {
-        derivedStateOf {
-            when (selected) {
-                0 -> pinkPrimary
-                1 -> shortBreakBackground
-                2 -> longBreakBackground
-                else -> pinkPrimary
-            }
+    val backgroundColor = remember(selected) {
+        when (selected) {
+            0 -> pinkPrimary
+            1 -> shortBreakBackground
+            2 -> longBreakBackground
+            else -> pinkPrimary
         }
     }
-    val containerColor by remember(selected) {
-        derivedStateOf {
-            when (selected) {
-                0 -> pinkSecondary
-                1 -> shortBreakPickerContainer
-                2 -> longBreakPickerContainer
-                else -> pinkSecondary
-            }
+    val containerColor = remember(selected) {
+        when (selected) {
+            0 -> pinkSecondary
+            1 -> shortBreakPickerContainer
+            2 -> longBreakPickerContainer
+            else -> pinkSecondary
         }
     }
-    val indicatorColor by remember(selected) {
-        derivedStateOf {
-            when (selected) {
-                0 -> darkPink
-                1 -> shortBreakPickerIndicator
-                2 -> longBreakPickerIndicator
-                else -> pinkSecondary
-            }
+    val indicatorColor = remember(selected) {
+        when (selected) {
+            0 -> darkPink
+            1 -> shortBreakPickerIndicator
+            2 -> longBreakPickerIndicator
+            else -> pinkSecondary
         }
     }
     val timerArcColor by remember(selected) {
@@ -162,14 +157,12 @@ fun TimerScreen(
     } else {
         lightGrayPomodoro
     }
-    val lightThemeTimerTextColor by remember(selected) {
-        derivedStateOf {
-            when (selected) {
-                0 -> darkPink
-                1 -> shortBreakTimerText
-                2 -> longBreakTimerText
-                else -> darkPink
-            }
+    val lightThemeTimerTextColor = remember(selected) {
+        when (selected) {
+            0 -> darkPink
+            1 -> shortBreakTimerText
+            2 -> longBreakTimerText
+            else -> darkPink
         }
     }
     val timerTextColor = if (isSystemInDarkTheme()) {
@@ -191,17 +184,54 @@ fun TimerScreen(
             }
         }
     )
-    val buttonText = when (uiState.currentState) {
-        CountdownState.Started -> "Pause"
-        CountdownState.Paused -> "Resume"
-        else -> "Start"
+    val buttonText = remember(uiState.currentState) {
+        when (uiState.currentState) {
+            CountdownState.Started -> "Pause"
+            CountdownState.Paused -> "Resume"
+            else -> "Start"
+        }
     }
-    val buttonIconId = when (uiState.currentState) {
-        CountdownState.Started -> R.drawable.ic_pause
-        CountdownState.Paused -> R.drawable.ic_play
-        else -> R.drawable.ic_play
+
+    val buttonIconId = remember(uiState.currentState) {
+        when (uiState.currentState) {
+            CountdownState.Started -> R.drawable.ic_pause
+            CountdownState.Paused -> R.drawable.ic_play
+            else -> R.drawable.ic_play
+        }
     }
     var isDialogOpen by remember { mutableStateOf(false) }
+
+    val dialogTitle = remember(uiState.currentState) {
+        if(uiState.currentState == CountdownState.Started) {
+            R.string.dialog_cancel_title
+        } else {
+            R.string.dialog_reset_title
+        }
+    }
+
+    val dialogDescription = remember(uiState.currentState) {
+        if(uiState.currentState == CountdownState.Started) {
+            R.string.dialog_cancel_text
+        } else {
+            R.string.dialog_reset_text
+        }
+    }
+
+    val hasTimerEnded by remember(uiState.timeLeft) {
+        derivedStateOf {
+            uiState.timeLeft != null && uiState.timeLeft == 0L
+        }
+    }
+
+    LaunchedEffect(uiState.currentState) {
+        isDialogOpen = false
+    }
+
+    LaunchedEffect(hasTimerEnded) {
+        if(hasTimerEnded && isDialogOpen) {
+            isDialogOpen = false
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Box(
@@ -436,24 +466,12 @@ fun TimerScreen(
                         }
                     )
                 },
-                title = {
-                    val title = if(uiState.currentState == CountdownState.Started) {
-                        R.string.dialog_cancel_title
-                    } else {
-                        R.string.dialog_reset_title
-                    }
-                    Text(text = stringResource(title) )
-                },
-                text = {
-                    val description = if(uiState.currentState == CountdownState.Started) {
-                        R.string.dialog_cancel_text
-                    } else {
-                        R.string.dialog_reset_text
-                    }
-                    Text(text = stringResource(description))
-                },
+                title = { Text(text = stringResource(dialogTitle)) },
+                text = { Text(text = stringResource(dialogDescription)) },
             )
         }
+
+
     }
 }
 
