@@ -42,7 +42,7 @@ fun PomodoroCountdown(
     onPositionChange: (Int) -> Unit,
 ) {
     var circleCenter by remember { mutableStateOf(Offset.Zero) }
-    val maxTime by remember { mutableLongStateOf(26 * 60 * 1000) }
+    val maxTime by remember { mutableLongStateOf(1 * 60 * 1000) }
     var percentage by remember { mutableFloatStateOf(0f) }
 
     val cuPercentage = animateFloatAsState(

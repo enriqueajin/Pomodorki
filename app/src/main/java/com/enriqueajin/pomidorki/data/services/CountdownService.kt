@@ -45,7 +45,7 @@ class CountdownService: Service() {
     @Inject
     lateinit var notificationManager: NotificationManager
 
-    private var countdownTimer = CountDownPomodoro(totalMinutes = 26L, context = this)
+    private var countdownTimer = CountDownPomodoro(totalMinutes = 1L, context = this)
 
     private val binder = CountdownBinder()
 

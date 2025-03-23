@@ -224,11 +224,7 @@ fun TimerScreen(
     }
 
     LaunchedEffect(uiState.currentState) {
-        isDialogOpen = false
-    }
-
-    LaunchedEffect(hasTimerEnded) {
-        if(hasTimerEnded && isDialogOpen) {
+        if(isDialogOpen) {
             isDialogOpen = false
         }
     }
