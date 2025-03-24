@@ -4,11 +4,13 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
-import android.content.Context
 import android.content.Intent
+import android.media.AudioAttributes
+import android.media.RingtoneManager
 import android.os.Binder
 import android.os.Build
 import androidx.core.app.NotificationCompat
+import com.enriqueajin.pomidorki.R
 import com.enriqueajin.pomidorki.data.countdown.CountDownPomodoro
 import com.enriqueajin.pomidorki.data.countdown.ServiceHelper
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_CLOSE
@@ -16,11 +18,15 @@ import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_IDLE
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_PAUSE
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_RESET
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_START
+import com.enriqueajin.pomidorki.utils.Constants.ACTION_TIMER_OVER
 import com.enriqueajin.pomidorki.utils.Constants.CLOSE_BUTTON_TITLE
 import com.enriqueajin.pomidorki.utils.Constants.COUNTDOWN_STATE
-import com.enriqueajin.pomidorki.utils.Constants.NOTIFICATION_CHANNEL_ID
-import com.enriqueajin.pomidorki.utils.Constants.NOTIFICATION_CHANNEL_NAME
-import com.enriqueajin.pomidorki.utils.Constants.NOTIFICATION_ID
+import com.enriqueajin.pomidorki.utils.Constants.NOTIFICATION_TICK_CHANNEL_ID
+import com.enriqueajin.pomidorki.utils.Constants.NOTIFICATION_TICK_CHANNEL_NAME
+import com.enriqueajin.pomidorki.utils.Constants.NOTIFICATION_TIMER_RINGTONE_CHANNEL_ID
+import com.enriqueajin.pomidorki.utils.Constants.NOTIFICATION_TIMER_RINGTONE_CHANNEL_NAME
+import com.enriqueajin.pomidorki.utils.Constants.NOTIFICATION_TICK_ID
+import com.enriqueajin.pomidorki.utils.Constants.NOTIFICATION_TIMER_RINGTONE_ID
 import com.enriqueajin.pomidorki.utils.Constants.PAUSE_BUTTON_TITLE
 import com.enriqueajin.pomidorki.utils.Constants.RESET_BUTTON_TITLE
 import com.enriqueajin.pomidorki.utils.Constants.RESUME_BUTTON_TITLE
@@ -92,24 +98,48 @@ class CountdownService: Service() {
             CountdownState.Idle.name, ACTION_SERVICE_IDLE -> {
                 _currentState.value = CountdownState.Idle
             }
+            ACTION_TIMER_OVER -> {
+                val pendingIntent = ServiceHelper.timeOverPendingIntent(this)
+                notifyTimerOver(pendingIntent)
+            }
         }
         return super.onStartCommand(intent, flags, startId)
     }
 
     private fun startForegroundService() {
-        createNotificationChannel()
-        startForeground(NOTIFICATION_ID, notificationBuilder.build())
+        createNotificationChannels()
+        startForeground(
+            NOTIFICATION_TICK_ID,
+            notificationBuilder.build()
+        )
     }
 
-    private fun createNotificationChannel() {
+    private fun createNotificationChannels() {
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                NOTIFICATION_CHANNEL_ID,
-                NOTIFICATION_CHANNEL_NAME,
+            // Notification channel used for timer onTick updates & action buttons
+            val timerTickChannel = NotificationChannel(
+                NOTIFICATION_TICK_CHANNEL_ID,
+                NOTIFICATION_TICK_CHANNEL_NAME,
                 NotificationManager.IMPORTANCE_LOW
             )
-            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(channel)
+
+            // Notification channel used when the timer is over
+            val soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+            val audioAttributes = AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .build()
+            val timerEndsChannel = NotificationChannel(
+                NOTIFICATION_TIMER_RINGTONE_CHANNEL_ID,
+                NOTIFICATION_TIMER_RINGTONE_CHANNEL_NAME,
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                setSound(soundUri, audioAttributes)
+                enableVibration(true)
+            }
+            notificationManager.createNotificationChannels(
+                listOf(timerTickChannel, timerEndsChannel)
+            )
         }
     }
 
@@ -130,7 +160,7 @@ class CountdownService: Service() {
 
     private fun closeTimer() {
         _currentState.value = CountdownState.Idle
-        notificationManager.cancel(NOTIFICATION_ID)
+        notificationManager.cancel(NOTIFICATION_TICK_ID)
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
@@ -190,12 +220,27 @@ class CountdownService: Service() {
     }
 
     private fun updateNotification(timeLeft: Long) {
-        notificationManager.notify(
-            NOTIFICATION_ID,
-            notificationBuilder.setContentText(
-                timeLeft.formatTime()
-            ).build()
-        )
+        val notification = notificationBuilder
+            .setContentText(timeLeft.formatTime())
+            .setOngoing(true)
+            .setContentIntent(ServiceHelper.clickPendingIntent(this))
+            .build()
+
+        notificationManager.notify(NOTIFICATION_TICK_ID, notification)
+    }
+
+    private fun notifyTimerOver(intent: PendingIntent) {
+        val notification = NotificationCompat.Builder(this, NOTIFICATION_TIMER_RINGTONE_CHANNEL_ID)
+            .setContentTitle("Pomodoro ended")
+            .setContentText("Timer is over")
+            .setContentIntent(intent)
+            .setSmallIcon(R.drawable.filled_timer)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
+            .clearActions()
+            .build()
+
+        notificationManager.notify(NOTIFICATION_TIMER_RINGTONE_ID, notification)
     }
 
     fun getTimeLeft(): StateFlow<Long> = countdownTimer.timeLeft
@@ -231,7 +276,7 @@ private fun addNotificationActions(
             )
         )
     }
-    notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build())
+    notificationManager.notify(NOTIFICATION_TICK_ID, notificationBuilder.build())
 }
 
 enum class CountdownState {
