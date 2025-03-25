@@ -95,7 +95,6 @@ import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_CLOSE
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_PAUSE
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_RESET
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_START
-import com.enriqueajin.pomidorki.utils.Constants.ACTION_TIMER_OVER
 import com.enriqueajin.pomidorki.utils.Constants.pomodoroTabItems
 import com.enriqueajin.pomidorki.utils.TimeFormatter.formatTime
 
@@ -227,15 +226,6 @@ fun TimerScreen(
     LaunchedEffect(uiState.currentState) {
         if(isDialogOpen) {
             isDialogOpen = false
-        }
-    }
-
-    LaunchedEffect(hasTimerEnded) {
-        if(hasTimerEnded) {
-            ServiceHelper.triggerForegroundService(
-                context = context,
-                action = ACTION_TIMER_OVER
-            )
         }
     }
 

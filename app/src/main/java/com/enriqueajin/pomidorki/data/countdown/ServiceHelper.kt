@@ -7,7 +7,6 @@ import android.os.Build
 import com.enriqueajin.pomidorki.data.services.CountdownService
 import com.enriqueajin.pomidorki.data.services.CountdownState
 import com.enriqueajin.pomidorki.presentation.MainActivity
-import com.enriqueajin.pomidorki.utils.Constants.ACTION_TIMER_OVER
 import com.enriqueajin.pomidorki.utils.Constants.CANCEL_REQUEST_CODE
 import com.enriqueajin.pomidorki.utils.Constants.CLICK_REQUEST_CODE
 import com.enriqueajin.pomidorki.utils.Constants.COUNTDOWN_STATE
@@ -77,15 +76,6 @@ object ServiceHelper {
         }
         return PendingIntent.getService(
             context, RESET_REQUEST_CODE, resetIntent, flag
-        )
-    }
-
-    fun timeOverPendingIntent(context: Context): PendingIntent {
-        val timeOverIntent = Intent(context, CountdownService::class.java).apply {
-            putExtra(TIMER_OVER, ACTION_TIMER_OVER)
-        }
-        return PendingIntent.getService(
-            context, TIME_OVER_REQUEST_CODE, timeOverIntent, flag
         )
     }
 

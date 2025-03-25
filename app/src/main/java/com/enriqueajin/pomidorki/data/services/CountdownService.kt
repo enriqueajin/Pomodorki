@@ -18,14 +18,13 @@ import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_IDLE
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_PAUSE
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_RESET
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_START
-import com.enriqueajin.pomidorki.utils.Constants.ACTION_TIMER_OVER
 import com.enriqueajin.pomidorki.utils.Constants.CLOSE_BUTTON_TITLE
 import com.enriqueajin.pomidorki.utils.Constants.COUNTDOWN_STATE
 import com.enriqueajin.pomidorki.utils.Constants.NOTIFICATION_TICK_CHANNEL_ID
 import com.enriqueajin.pomidorki.utils.Constants.NOTIFICATION_TICK_CHANNEL_NAME
+import com.enriqueajin.pomidorki.utils.Constants.NOTIFICATION_TICK_ID
 import com.enriqueajin.pomidorki.utils.Constants.NOTIFICATION_TIMER_RINGTONE_CHANNEL_ID
 import com.enriqueajin.pomidorki.utils.Constants.NOTIFICATION_TIMER_RINGTONE_CHANNEL_NAME
-import com.enriqueajin.pomidorki.utils.Constants.NOTIFICATION_TICK_ID
 import com.enriqueajin.pomidorki.utils.Constants.NOTIFICATION_TIMER_RINGTONE_ID
 import com.enriqueajin.pomidorki.utils.Constants.PAUSE_BUTTON_TITLE
 import com.enriqueajin.pomidorki.utils.Constants.RESET_BUTTON_TITLE
@@ -39,6 +38,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -78,9 +78,16 @@ class CountdownService: Service() {
                 setStartedActions()
                 startTimer()
                 coroutineScope.launch {
-                    countdownTimer.timeLeft.collect { timeLeft ->
+                    countdownTimer.timeLeft
+                        .takeWhile { timeLeft -> timeLeft > 0L }
+                        .collect { timeLeft ->
                         updateNotification(timeLeft)
                     }
+
+                    notificationManager.cancel(NOTIFICATION_TICK_ID)
+                    stopForeground(STOP_FOREGROUND_REMOVE)
+                    stopSelf()
+                    notifyTimerOver()
                 }
             }
             CountdownState.Paused.name, ACTION_SERVICE_PAUSE -> {
@@ -97,10 +104,6 @@ class CountdownService: Service() {
             }
             CountdownState.Idle.name, ACTION_SERVICE_IDLE -> {
                 _currentState.value = CountdownState.Idle
-            }
-            ACTION_TIMER_OVER -> {
-                val pendingIntent = ServiceHelper.timeOverPendingIntent(this)
-                notifyTimerOver(pendingIntent)
             }
         }
         return super.onStartCommand(intent, flags, startId)
@@ -222,20 +225,20 @@ class CountdownService: Service() {
     private fun updateNotification(timeLeft: Long) {
         val notification = notificationBuilder
             .setContentText(timeLeft.formatTime())
-            .setOngoing(true)
             .setContentIntent(ServiceHelper.clickPendingIntent(this))
             .build()
 
         notificationManager.notify(NOTIFICATION_TICK_ID, notification)
     }
 
-    private fun notifyTimerOver(intent: PendingIntent) {
+    private fun notifyTimerOver() {
         val notification = NotificationCompat.Builder(this, NOTIFICATION_TIMER_RINGTONE_CHANNEL_ID)
             .setContentTitle("Pomodoro ended")
             .setContentText("Timer is over")
-            .setContentIntent(intent)
+            .setContentIntent(ServiceHelper.clickPendingIntent(this))
             .setSmallIcon(R.drawable.filled_timer)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
             .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
             .clearActions()
             .build()
