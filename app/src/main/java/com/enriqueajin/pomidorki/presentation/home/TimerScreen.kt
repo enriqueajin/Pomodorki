@@ -65,6 +65,9 @@ import com.enriqueajin.pomidorki.R
 import com.enriqueajin.pomidorki.data.countdown.ServiceHelper
 import com.enriqueajin.pomidorki.data.services.CountdownState
 import com.enriqueajin.pomidorki.presentation.MainActivity
+import com.enriqueajin.pomidorki.presentation.UserSettingsEvent
+import com.enriqueajin.pomidorki.presentation.UserSettingsState
+import com.enriqueajin.pomidorki.presentation.UserSettingsViewModel
 import com.enriqueajin.pomidorki.presentation.home.components.CountdownView
 import com.enriqueajin.pomidorki.presentation.home.components.PomodoroCountdown
 import com.enriqueajin.pomidorki.presentation.home.components.TimerButton
@@ -97,6 +100,7 @@ import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_RESET
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_START
 import com.enriqueajin.pomidorki.utils.Constants.pomodoroTabItems
 import com.enriqueajin.pomidorki.utils.TimeFormatter.formatTime
+import com.enriqueajin.pomidorki.utils.toMillis
 
 @Composable
 fun TimerScreenRoot(
@@ -297,7 +301,7 @@ fun TimerScreen(
                             .size(197.dp)
                             .background(pinkPrimary),
                         initialValue = 0,
-                        timeLeftMillis = uiState.timeLeft ?: 0L,
+                        timeLeftMillis = uiState.timeLeft ?: 25.toMillis(),
                         arcColor = timerArcColor,
                         timeElapsedArcColor = timeElapsedArcColor,
                         circleRadius = 340f,

@@ -75,6 +75,7 @@ dependencies {
     implementation(libs.hilt.navigation)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.constraint.layout)
+    implementation(libs.androidx.datastore)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
