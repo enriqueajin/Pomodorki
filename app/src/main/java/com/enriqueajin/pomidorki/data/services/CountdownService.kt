@@ -13,6 +13,7 @@ import androidx.core.app.NotificationCompat
 import com.enriqueajin.pomidorki.R
 import com.enriqueajin.pomidorki.data.countdown.CountDownPomodoro
 import com.enriqueajin.pomidorki.data.countdown.ServiceHelper
+import com.enriqueajin.pomidorki.data.model.PomodoroServiceData
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_CLOSE
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_IDLE
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_PAUSE
@@ -38,8 +39,6 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.takeWhile
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -51,19 +50,62 @@ class CountdownService: Service() {
     @Inject
     lateinit var notificationManager: NotificationManager
 
-    private var countdownTimer = CountDownPomodoro(totalMinutes = 1L, context = this)
-
+    private lateinit var countdownTimer: CountDownPomodoro
     private val binder = CountdownBinder()
 
-    private val _currentState: MutableStateFlow<CountdownState> = MutableStateFlow(CountdownState.Idle)
-    val currentState = _currentState.asStateFlow()
+    private val _serviceData = MutableStateFlow(PomodoroServiceData())
+    val serviceData = _serviceData.asStateFlow()
+
+    private fun updateServiceData(
+        currentState: CountdownState? = null,
+        timeLeft: Long? = null,
+        initialMillis: Long? = null,
+    ) {
+        _serviceData.value = _serviceData.value.copy(
+            currentState = currentState ?: _serviceData.value.currentState,
+            timeLeft = timeLeft ?: _serviceData.value.timeLeft,
+            initialMillis = initialMillis ?: _serviceData.value.initialMillis
+        )
+    }
 
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
+
+    fun initCountdown(selectedTimerFlow: StateFlow<Int>) {
+        countdownTimer = CountDownPomodoro(
+            pomodoroDuration = 25,
+            shortBreakDuration = 5,
+            longBreakDuration = 15,
+            context = this,
+            selectedTimer = selectedTimerFlow,
+            onTimerTick = { timeLeft ->
+                if(timeLeft > 0L) {
+                    updateServiceData(timeLeft = timeLeft)
+                    updateNotification(timeLeft)
+                } else {
+                    notificationManager.cancel(NOTIFICATION_TICK_ID)
+                    stopForeground(STOP_FOREGROUND_REMOVE)
+                    stopSelf()
+                    notifyTimerOver()
+                }
+            },
+            onInitialMillisChange = { initialMillis ->
+                updateServiceData(
+                    initialMillis = initialMillis,
+                    timeLeft = initialMillis
+                )
+            }
+        )
+        // Set service data initial values
+        updateServiceData(
+            currentState = CountdownState.Idle,
+            timeLeft = countdownTimer.timeLeft.value,
+            initialMillis = countdownTimer.initialMillis
+        )
+    }
 
     override fun onBind(intent: Intent?) = binder
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-
 
         val action =
             intent?.action ?: // when triggered by the UI
@@ -77,18 +119,6 @@ class CountdownService: Service() {
                 startForegroundService()
                 setStartedActions()
                 startTimer()
-                coroutineScope.launch {
-                    countdownTimer.timeLeft
-                        .takeWhile { timeLeft -> timeLeft > 0L }
-                        .collect { timeLeft ->
-                        updateNotification(timeLeft)
-                    }
-
-                    notificationManager.cancel(NOTIFICATION_TICK_ID)
-                    stopForeground(STOP_FOREGROUND_REMOVE)
-                    stopSelf()
-                    notifyTimerOver()
-                }
             }
             CountdownState.Paused.name, ACTION_SERVICE_PAUSE -> {
                 setPausedActions()
@@ -103,7 +133,7 @@ class CountdownService: Service() {
                 closeTimer()
             }
             CountdownState.Idle.name, ACTION_SERVICE_IDLE -> {
-                _currentState.value = CountdownState.Idle
+                updateServiceData(currentState = CountdownState.Idle)
             }
         }
         return super.onStartCommand(intent, flags, startId)
@@ -147,22 +177,21 @@ class CountdownService: Service() {
     }
 
     private fun startTimer() {
-        _currentState.value = CountdownState.Started
+        updateServiceData(currentState = CountdownState.Started)
         countdownTimer.start()
     }
 
     private fun pauseTimer() {
-        _currentState.value = CountdownState.Paused
+        updateServiceData(currentState = CountdownState.Paused)
         countdownTimer.pause()
     }
 
     private fun resetTimer() {
-        _currentState.value = CountdownState.Reset
+        updateServiceData(currentState = CountdownState.Reset)
         countdownTimer.reset()
     }
 
     private fun closeTimer() {
-        _currentState.value = CountdownState.Idle
         notificationManager.cancel(NOTIFICATION_TICK_ID)
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
@@ -245,8 +274,6 @@ class CountdownService: Service() {
 
         notificationManager.notify(NOTIFICATION_TIMER_RINGTONE_ID, notification)
     }
-
-    fun getTimeLeft(): StateFlow<Long> = countdownTimer.timeLeft
 
     override fun onDestroy() {
         super.onDestroy()

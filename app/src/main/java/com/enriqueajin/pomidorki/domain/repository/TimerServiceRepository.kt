@@ -1,12 +1,12 @@
 package com.enriqueajin.pomidorki.domain.repository
 
-import com.enriqueajin.pomidorki.data.services.CountdownState
+import com.enriqueajin.pomidorki.data.model.PomodoroServiceData
 import kotlinx.coroutines.flow.StateFlow
 
 interface TimerServiceRepository {
 
+    val serviceData: StateFlow<PomodoroServiceData>
     fun bindTimerService()
     fun unbindTimerService()
-    fun getCurrentStatus(): StateFlow<CountdownState?>
-    fun getTimeLeft(): StateFlow<Long?>
+    fun setSelectedTimer(selected: Int)
 }

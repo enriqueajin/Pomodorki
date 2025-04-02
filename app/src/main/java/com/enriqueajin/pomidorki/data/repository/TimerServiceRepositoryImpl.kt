@@ -5,18 +5,16 @@ import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.os.IBinder
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.enriqueajin.pomidorki.data.model.PomodoroServiceData
 import com.enriqueajin.pomidorki.data.services.CountdownService
-import com.enriqueajin.pomidorki.data.services.CountdownState
 import com.enriqueajin.pomidorki.domain.repository.TimerServiceRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -30,27 +28,25 @@ class TimerServiceRepositoryImpl @Inject constructor(
 
     private val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
-    private val _currentState = MutableStateFlow<CountdownState?>(null)
-    private val _timeLeft = MutableStateFlow<Long?>(null)
+    private val _selectedTimer = MutableStateFlow(0)
+    val selectedTimer = _selectedTimer.asStateFlow()
+
+    private val _serviceData = MutableStateFlow(PomodoroServiceData())
+    override val serviceData = _serviceData.asStateFlow()
 
     private val connection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             val binder = service as CountdownService.CountdownBinder
             countDownService = binder.getService()
 
-            countDownService?.let {
+            countDownService?.let { countdownService ->
+                countdownService.initCountdown(selectedTimer)
                 coroutineScope.launch {
-                    it.currentState.collect { state ->
-                        _currentState.value = state
-                    }
-                }
-                coroutineScope.launch {
-                    it.getTimeLeft().collect { timeLeft ->
-                        _timeLeft.value = timeLeft
+                    countdownService.serviceData.collect { data ->
+                        _serviceData.value = data
                     }
                 }
             }
-            Log.i("TAG", "onServiceConnected: ${countDownService?.currentState}")
             isBound = true
         }
 
@@ -72,6 +68,7 @@ class TimerServiceRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun getCurrentStatus(): StateFlow<CountdownState?> = _currentState.asStateFlow()
-    override fun getTimeLeft(): StateFlow<Long?> =_timeLeft.asStateFlow()
+    override fun setSelectedTimer(selected: Int) {
+        _selectedTimer.value = selected
+    }
 }

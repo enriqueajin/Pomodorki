@@ -65,9 +65,6 @@ import com.enriqueajin.pomidorki.R
 import com.enriqueajin.pomidorki.data.countdown.ServiceHelper
 import com.enriqueajin.pomidorki.data.services.CountdownState
 import com.enriqueajin.pomidorki.presentation.MainActivity
-import com.enriqueajin.pomidorki.presentation.UserSettingsEvent
-import com.enriqueajin.pomidorki.presentation.UserSettingsState
-import com.enriqueajin.pomidorki.presentation.UserSettingsViewModel
 import com.enriqueajin.pomidorki.presentation.home.components.CountdownView
 import com.enriqueajin.pomidorki.presentation.home.components.PomodoroCountdown
 import com.enriqueajin.pomidorki.presentation.home.components.TimerButton
@@ -271,11 +268,17 @@ fun TimerScreen(
                     containerColor = containerColor,
                     indicatorColor = indicatorColor,
                     onTabSelected = { index ->
-                        if (uiState.currentState != CountdownState.Started) {
-                            selected = index
-                        } else {
-                            tabToConfirm = index
-                            isDialogOpen = true
+                        when (uiState.currentState) {
+                            CountdownState.Started, CountdownState.Paused -> {
+                                if(selected != index) {
+                                    tabToConfirm = index
+                                    isDialogOpen = true
+                                }
+                            }
+                            else -> {
+                                selected = index
+                                event(TimerScreenEvent.UpdateSelectedTimer(index))
+                            }
                         }
                     }
                 )
@@ -438,11 +441,13 @@ fun TimerScreen(
                 confirmButton = {
                     TextButton(
                         onClick = {
-                            val action = if(uiState.currentState == CountdownState.Started) {
-                                selected = tabToConfirm
-                                ACTION_SERVICE_CLOSE
-                            } else {
-                                ACTION_SERVICE_RESET
+                            val action = when(uiState.currentState) {
+                                CountdownState.Started, CountdownState.Paused -> {
+                                    selected = tabToConfirm
+                                    event(TimerScreenEvent.UpdateSelectedTimer(tabToConfirm))
+                                    ACTION_SERVICE_CLOSE
+                                }
+                                else -> ACTION_SERVICE_RESET
                             }
 
                             ServiceHelper.triggerForegroundService(
