@@ -2,7 +2,7 @@ package com.enriqueajin.pomidorki.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.enriqueajin.pomidorki.data.repository.UserSettingsRepositoryImpl
+import com.enriqueajin.pomidorki.domain.repository.UserSettingsRepository
 import com.enriqueajin.pomidorki.utils.PreferencesKeys.LONG_BREAK_DURATION
 import com.enriqueajin.pomidorki.utils.PreferencesKeys.POMODORO_DURATION
 import com.enriqueajin.pomidorki.utils.PreferencesKeys.SHORT_BREAK_DURATION
@@ -16,10 +16,10 @@ import javax.inject.Inject
 
 @HiltViewModel
 class UserSettingsViewModel @Inject constructor(
-    private val userSettingsRepositoryImpl: UserSettingsRepositoryImpl
+    private val userSettingsRepository: UserSettingsRepository
 ) : ViewModel() {
 
-    private val dataStoreFlow = userSettingsRepositoryImpl.getDataStoreData()
+    private val dataStoreFlow = userSettingsRepository.getDataStoreData()
 
     val userSettingsState: StateFlow<UserSettingsState> = dataStoreFlow
         .map { preferences ->
@@ -39,17 +39,17 @@ class UserSettingsViewModel @Inject constructor(
         when(event) {
             is UserSettingsEvent.UpdatePomodoroDuration -> {
                 viewModelScope.launch {
-                    userSettingsRepositoryImpl.updatePomodoroDuration(event.minutes)
+                    userSettingsRepository.updatePomodoroDuration(event.minutes)
                 }
             }
             is UserSettingsEvent.UpdateShortBreakDuration -> {
                 viewModelScope.launch {
-                    userSettingsRepositoryImpl.updateShortBreakDuration(event.minutes)
+                    userSettingsRepository.updateShortBreakDuration(event.minutes)
                 }
             }
             is UserSettingsEvent.UpdateLongBreakDuration -> {
                 viewModelScope.launch {
-                    userSettingsRepositoryImpl.updateLongBreakDuration(event.minutes)
+                    userSettingsRepository.updateLongBreakDuration(event.minutes)
                 }
             }
         }
