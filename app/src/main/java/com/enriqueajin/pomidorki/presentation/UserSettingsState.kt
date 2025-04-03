@@ -1,7 +1,7 @@
 package com.enriqueajin.pomidorki.presentation
 
 data class UserSettingsState(
-    val pomodoroDuration: Int? = null,
-    val shortBreakDuration: Int? = null,
-    val longBreakDuration: Int? = null
+    val pomodoroDuration: Long? = null,
+    val shortBreakDuration: Long? = null,
+    val longBreakDuration: Long? = null
 )

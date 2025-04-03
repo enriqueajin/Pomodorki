@@ -107,7 +107,7 @@ fun TimerScreenRoot(
 
     TimerScreen(
         event = timerScreenViewModel::onEvent,
-        uiState = uiState
+        uiState = uiState,
     )
 }
 
@@ -494,8 +494,8 @@ private fun startCountdownTimerService(
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun TimerScreenPreview() {
-    TimerScreen(
-        event = {},
-        uiState = TimerScreenState()
-    )
+//    TimerScreen(
+//        event = {},
+//        uiState = TimerScreenState()
+//    )
 }

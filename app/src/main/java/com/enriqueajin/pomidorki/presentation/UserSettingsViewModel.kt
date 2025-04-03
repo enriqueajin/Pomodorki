@@ -7,10 +7,6 @@ import com.enriqueajin.pomidorki.utils.PreferencesKeys.LONG_BREAK_DURATION
 import com.enriqueajin.pomidorki.utils.PreferencesKeys.POMODORO_DURATION
 import com.enriqueajin.pomidorki.utils.PreferencesKeys.SHORT_BREAK_DURATION
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -19,37 +15,34 @@ class UserSettingsViewModel @Inject constructor(
     private val userSettingsRepository: UserSettingsRepository
 ) : ViewModel() {
 
-    private val dataStoreFlow = userSettingsRepository.getDataStoreData()
-
-    val userSettingsState: StateFlow<UserSettingsState> = dataStoreFlow
-        .map { preferences ->
-            UserSettingsState(
-                pomodoroDuration = preferences[POMODORO_DURATION] ?: 25,
-                shortBreakDuration = preferences[SHORT_BREAK_DURATION] ?: 5,
-                longBreakDuration = preferences[LONG_BREAK_DURATION] ?: 15
-            )
-         }
-        .stateIn(
-             viewModelScope,
-             SharingStarted.WhileSubscribed(5000),
-             UserSettingsState()
-        )
+    suspend fun getSetting(key: String) {
+        userSettingsRepository.getSetting(key)
+    }
 
     fun onUserSettingsEvent(event: UserSettingsEvent) {
         when(event) {
             is UserSettingsEvent.UpdatePomodoroDuration -> {
                 viewModelScope.launch {
-                    userSettingsRepository.updatePomodoroDuration(event.minutes)
+                    userSettingsRepository.saveSetting(
+                        key = POMODORO_DURATION,
+                        value = event.minutes.toString()
+                    )
                 }
             }
             is UserSettingsEvent.UpdateShortBreakDuration -> {
                 viewModelScope.launch {
-                    userSettingsRepository.updateShortBreakDuration(event.minutes)
+                    userSettingsRepository.saveSetting(
+                        key = SHORT_BREAK_DURATION,
+                        value = event.minutes.toString()
+                    )
                 }
             }
             is UserSettingsEvent.UpdateLongBreakDuration -> {
                 viewModelScope.launch {
-                    userSettingsRepository.updateLongBreakDuration(event.minutes)
+                    userSettingsRepository.saveSetting(
+                        key = LONG_BREAK_DURATION,
+                        value = event.minutes.toString()
+                    )
                 }
             }
         }
