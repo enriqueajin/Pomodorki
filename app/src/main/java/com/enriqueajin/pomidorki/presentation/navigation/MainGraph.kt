@@ -1,5 +1,6 @@
 package com.enriqueajin.pomidorki.presentation.navigation
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -14,6 +15,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.enriqueajin.pomidorki.presentation.home.TimerScreenRoot
+import com.enriqueajin.pomidorki.presentation.pomodoro_settings.PomodoroSettingsScreenRoot
 import com.enriqueajin.pomidorki.presentation.stats.StatsScreen
 import com.enriqueajin.pomidorki.presentation.tasks.TasksScreen
 import com.enriqueajin.pomidorki.utils.Constants
@@ -32,15 +34,23 @@ fun MainGraph() {
         else -> 0
     }
 
+    val isBottomBarVisible = remember(navBackStackEntry) {
+        navBackStackEntry?.destination?.route == Route.Timer::class.qualifiedName ||
+        navBackStackEntry?.destination?.route == Route.Tasks::class.qualifiedName ||
+        navBackStackEntry?.destination?.route == Route.Stats::class.qualifiedName
+    }
+
     Scaffold(
         bottomBar = {
-            BottomNavigation(
-                items = Constants.getNavigationItems(),
-                selectedItem = selectedItem,
-                onItemClick = { route ->
-                    navigateToTab(navController, route)
-                }
-            )
+            AnimatedVisibility(isBottomBarVisible) {
+                BottomNavigation(
+                    items = Constants.getNavigationItems(),
+                    selectedItem = selectedItem,
+                    onItemClick = { route ->
+                        navigateToTab(navController, route)
+                    }
+                )
+            }
         }
     ) { innerPadding ->
         NavHost(
@@ -49,13 +59,20 @@ fun MainGraph() {
             modifier = Modifier.padding(innerPadding)
         ) {
             composable<Route.Timer> {
-                TimerScreenRoot()
+                TimerScreenRoot {
+                    navigateToDetail(navController) {
+                        Route.Settings
+                    }
+                }
             }
             composable<Route.Tasks> {
                 TasksScreen()
             }
             composable<Route.Stats> {
                 StatsScreen()
+            }
+            composable<Route.Settings> {
+                PomodoroSettingsScreenRoot()
             }
         }
     }

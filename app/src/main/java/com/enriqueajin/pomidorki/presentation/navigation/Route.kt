@@ -12,4 +12,7 @@ sealed interface Route {
 
     @Serializable
     data object Stats: Route
+
+    @Serializable
+    data object Settings: Route
 }

@@ -5,6 +5,7 @@ import android.os.CountDownTimer
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.enriqueajin.pomidorki.presentation.UserSettingsState
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_IDLE
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -18,9 +19,7 @@ import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 
 class CountDownPomodoro(
-    private val pomodoroDuration: Long,
-    private val shortBreakDuration: Long,
-    private val longBreakDuration: Long,
+    private val durationSettings: UserSettingsState,
     private val context: Context,
     private val selectedTimer: StateFlow<Int>,
     private val onTimerTick: (Long) -> Unit,
@@ -29,6 +28,8 @@ class CountDownPomodoro(
 
     private var countDownTimer: CountDownTimer? = null
     private val countDownInterval = 1_000L
+
+    private val _durationSettings = MutableStateFlow(durationSettings)
 
     private var isActive by mutableStateOf(false)
     var initialMillis: Long = 0
@@ -84,23 +85,28 @@ class CountDownPomodoro(
     private fun getInitialMillis(timerIndex: Int): Long {
         val returningInitialMillis = when (timerIndex) {
             0 -> {
-                initialMillis = TimeUnit.MINUTES.toMillis(pomodoroDuration)
+                initialMillis = TimeUnit.MINUTES.toMillis(_durationSettings.value.pomodoroDuration)
                 initialMillis
             }
             1 -> {
-                initialMillis = TimeUnit.MINUTES.toMillis(shortBreakDuration)
+                initialMillis = TimeUnit.MINUTES.toMillis(_durationSettings.value.shortBreakDuration)
                 initialMillis
             }
             2 -> {
-                initialMillis = TimeUnit.MINUTES.toMillis(longBreakDuration)
+                initialMillis = TimeUnit.MINUTES.toMillis(_durationSettings.value.longBreakDuration)
                 initialMillis
             }
             else -> {
-                initialMillis = TimeUnit.MINUTES.toMillis(pomodoroDuration)
+                initialMillis = TimeUnit.MINUTES.toMillis(_durationSettings.value.pomodoroDuration)
                 initialMillis
             }
         }
         onInitialMillisChange(returningInitialMillis)
         return returningInitialMillis
+    }
+
+    fun updateDurations(newDurationSettings: UserSettingsState) {
+        _durationSettings.value = newDurationSettings
+        _timeLeft.value = getInitialMillis(selectedTimer.value)
     }
 }

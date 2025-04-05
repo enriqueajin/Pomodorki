@@ -7,6 +7,9 @@ import com.enriqueajin.pomidorki.utils.PreferencesKeys.LONG_BREAK_DURATION
 import com.enriqueajin.pomidorki.utils.PreferencesKeys.POMODORO_DURATION
 import com.enriqueajin.pomidorki.utils.PreferencesKeys.SHORT_BREAK_DURATION
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -14,6 +17,21 @@ import javax.inject.Inject
 class UserSettingsViewModel @Inject constructor(
     private val userSettingsRepository: UserSettingsRepository
 ) : ViewModel() {
+
+    val userSettingsState = userSettingsRepository.userSettingsFlow.map { preferences ->
+        val pomodoroDuration = userSettingsRepository.getSetting(preferences, POMODORO_DURATION)
+        val shortBreakDuration = userSettingsRepository.getSetting(preferences, SHORT_BREAK_DURATION)
+        val longBreakDuration = userSettingsRepository.getSetting(preferences, LONG_BREAK_DURATION)
+        UserSettingsState(
+            pomodoroDuration = pomodoroDuration.toLong(),
+            shortBreakDuration = shortBreakDuration.toLong(),
+            longBreakDuration = longBreakDuration.toLong(),
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = UserSettingsState()
+    )
 
     suspend fun getSetting(key: String) {
         userSettingsRepository.getSetting(key)

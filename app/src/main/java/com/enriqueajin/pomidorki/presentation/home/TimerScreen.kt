@@ -102,12 +102,14 @@ import com.enriqueajin.pomidorki.utils.toMillis
 @Composable
 fun TimerScreenRoot(
     timerScreenViewModel: TimerScreenViewModel = hiltViewModel(),
+    onSettingsIconClick: () -> Unit,
 ) {
     val uiState by timerScreenViewModel.uiState.collectAsStateWithLifecycle()
 
     TimerScreen(
         event = timerScreenViewModel::onEvent,
         uiState = uiState,
+        onSettingsIconClick = onSettingsIconClick
     )
 }
 
@@ -115,6 +117,7 @@ fun TimerScreenRoot(
 fun TimerScreen(
     event: (TimerScreenEvent) -> Unit,
     uiState: TimerScreenState,
+    onSettingsIconClick: () -> Unit
 ) {
     val context = LocalContext.current
     var selected by rememberSaveable { mutableIntStateOf(0) }
@@ -247,7 +250,7 @@ fun TimerScreen(
                 IconButton(
                     modifier = Modifier
                         .align(Alignment.End),
-                    onClick = { }
+                    onClick = onSettingsIconClick
                 ) {
                     Icon(
                         modifier = Modifier
@@ -494,8 +497,9 @@ private fun startCountdownTimerService(
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun TimerScreenPreview() {
-//    TimerScreen(
-//        event = {},
-//        uiState = TimerScreenState()
-//    )
+    TimerScreen(
+        event = {},
+        uiState = TimerScreenState(),
+        onSettingsIconClick = {}
+    )
 }

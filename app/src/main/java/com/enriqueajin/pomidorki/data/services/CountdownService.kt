@@ -15,6 +15,7 @@ import com.enriqueajin.pomidorki.data.countdown.CountDownPomodoro
 import com.enriqueajin.pomidorki.data.countdown.ServiceHelper
 import com.enriqueajin.pomidorki.data.model.PomodoroServiceData
 import com.enriqueajin.pomidorki.domain.repository.UserSettingsRepository
+import com.enriqueajin.pomidorki.presentation.UserSettingsState
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_CLOSE
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_IDLE
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_PAUSE
@@ -80,13 +81,17 @@ class CountdownService: Service() {
 
     fun initCountdown(selectedTimerFlow: StateFlow<Int>) {
         coroutineScope.launch {
-            val pomodoroDuration = userSettingsRepository.getSetting(POMODORO_DURATION)?.toLong() ?: 111L
-            val shortBreakDuration = userSettingsRepository.getSetting(SHORT_BREAK_DURATION)?.toLong() ?: 222L
-            val longBreakDuration = userSettingsRepository.getSetting(LONG_BREAK_DURATION)?.toLong() ?: 333L
+            val initialPomodoroDuration = userSettingsRepository.getSetting(POMODORO_DURATION).toLong()
+            val initialShortBreakDuration = userSettingsRepository.getSetting(SHORT_BREAK_DURATION).toLong()
+            val initialLongBreakDuration = userSettingsRepository.getSetting(LONG_BREAK_DURATION).toLong()
+            val durationSettings = UserSettingsState(
+                pomodoroDuration = initialPomodoroDuration,
+                shortBreakDuration = initialShortBreakDuration,
+                longBreakDuration = initialLongBreakDuration
+            )
+
             countdownTimer = CountDownPomodoro(
-                pomodoroDuration = pomodoroDuration,
-                shortBreakDuration = shortBreakDuration,
-                longBreakDuration = longBreakDuration,
+                durationSettings = durationSettings,
                 context = this@CountdownService,
                 selectedTimer = selectedTimerFlow,
                 onTimerTick = { timeLeft ->
@@ -113,6 +118,18 @@ class CountdownService: Service() {
                 timeLeft = countdownTimer.timeLeft.value,
                 initialMillis = countdownTimer.initialMillis
             )
+            userSettingsRepository.userSettingsFlow.collect { preferences ->
+                val pomodoroDuration = userSettingsRepository.getSetting(preferences, POMODORO_DURATION).toLong()
+                val shortBreakDuration = userSettingsRepository.getSetting(preferences, SHORT_BREAK_DURATION).toLong()
+                val longBreakDuration = userSettingsRepository.getSetting(preferences, LONG_BREAK_DURATION).toLong()
+                countdownTimer.updateDurations(
+                    UserSettingsState(
+                        pomodoroDuration = pomodoroDuration,
+                        shortBreakDuration = shortBreakDuration,
+                        longBreakDuration = longBreakDuration
+                    )
+                )
+            }
         }
     }
 

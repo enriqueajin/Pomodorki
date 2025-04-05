@@ -5,8 +5,9 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.enriqueajin.pomidorki.domain.repository.UserSettingsRepository
-import com.enriqueajin.pomidorki.utils.PreferencesKeys.preferencesDefaults
+import com.enriqueajin.pomidorki.utils.getDefaultPreference
 import com.enriqueajin.pomidorki.utils.safeInvoke
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -16,13 +17,21 @@ class UserSettingsRepositoryImpl @Inject constructor(
     private val dataStore: DataStore<Preferences>
 ) : UserSettingsRepository {
 
-    override suspend fun getSetting(key: String): String? {
+    override val userSettingsFlow: Flow<Preferences> = dataStore.data
+
+    override suspend fun getSetting(key: String): String {
         return safeInvoke {
             val preferences: Preferences = dataStore.data.first()
             val preferencesKey: Preferences.Key<String> = stringPreferencesKey(key)
-            val setting = preferences[preferencesKey]
-            setting ?: preferencesDefaults[key]
-        }
+            preferences[preferencesKey]
+        } ?: getDefaultPreference(key)
+    }
+
+    override suspend fun getSetting(preferences: Preferences, key: String): String {
+        return safeInvoke {
+            val preferencesKey: Preferences.Key<String> = stringPreferencesKey(key)
+            preferences[preferencesKey]
+        } ?: getDefaultPreference(key)
     }
 
     override suspend fun saveSetting(key: String, value: String) {

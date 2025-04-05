@@ -1,5 +1,9 @@
 <resources>
     <string name="app_name">Pomidorki</string>
+
+    <string name="cancel">Cancel</string>
+    <string name="accept">Accept</string>
+
     <string name="timer_picker_tab_row">Timer Picker TabRow</string>
     <string name="tab_pomodoro">Pomodoro</string>
     <string name="tab_short_break">Short Break</string>
@@ -14,4 +18,6 @@
     <string name="dialog_reset_text">Are you sure you want to reset the current pomodoro?</string>
     <string name="dialog_no_button">No</string>
     <string name="dialog_yes_button">Yes</string>
+
+    <string name="pomodoro_settings_title">Pomodoro Settings</string>
 </resources>
