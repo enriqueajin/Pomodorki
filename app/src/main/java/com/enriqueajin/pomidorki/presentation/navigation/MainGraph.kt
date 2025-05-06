@@ -17,7 +17,7 @@ import androidx.navigation.compose.rememberNavController
 import com.enriqueajin.pomidorki.presentation.home.TimerScreenRoot
 import com.enriqueajin.pomidorki.presentation.pomodoro_settings.PomodoroSettingsScreenRoot
 import com.enriqueajin.pomidorki.presentation.stats.StatsScreen
-import com.enriqueajin.pomidorki.presentation.tasks.TasksScreen
+import com.enriqueajin.pomidorki.presentation.tasks.TasksScreenRoot
 import com.enriqueajin.pomidorki.utils.Constants
 
 @Composable
@@ -66,7 +66,7 @@ fun MainGraph() {
                 }
             }
             composable<Route.Tasks> {
-                TasksScreen()
+                TasksScreenRoot()
             }
             composable<Route.Stats> {
                 StatsScreen()
