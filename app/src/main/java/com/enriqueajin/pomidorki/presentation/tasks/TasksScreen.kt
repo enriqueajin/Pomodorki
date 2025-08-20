@@ -1,6 +1,7 @@
 package com.enriqueajin.pomidorki.presentation.tasks
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.rounded.Clear
 import androidx.compose.material.icons.rounded.Menu
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -83,75 +85,96 @@ private fun TasksScreen(
     event: (TasksScreenEvent) -> Unit
 ) {
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp)
-    ) {
-        Row(
-            modifier = modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            StatusFilters(
-                selected = state.selectedStatus ?: Status.TODO.label,
-                onSelectedChange = { event(TasksScreenEvent.UpdateSelectedStatus(it)) },
-                onChipClick = { }
-            )
-            val sortingOptions = arrayOf("Sort by priority", "Sort by title", "Sort by category")
-            val groupingOptions = arrayOf("Group by category", "Group by priority")
-
-            Row {
-                var isGroupingMenuExpanded by remember { mutableStateOf(false) }
-                var isSortingMenuExpanded by remember { mutableStateOf(false) }
-                ActionDropdownMenu(
-                    modifier.size(28.dp),
-                    expanded = isSortingMenuExpanded,
-                    icon = Icons.Default.MoreVert,
-                    onExpandedChange = { isSortingMenuExpanded = it },
-                    dropdownItemList = sortingOptions,
-                    onDropdownItemClick = { item ->
-                        isSortingMenuExpanded = false
-                        when(item) {
-                           "Sort by priority" -> { event(TasksScreenEvent.UpdateCurrentSorting(Sorting.Priority)) }
-                           "Sort by title" -> { event(TasksScreenEvent.UpdateCurrentSorting(Sorting.Title)) }
-                           "Sort by category" -> { event(TasksScreenEvent.UpdateCurrentSorting(Sorting.Category)) }
-                        }
-                    }
-                )
-                Spacer(modifier = Modifier.width(10.dp))
-                ActionDropdownMenu(
-                    modifier.size(28.dp),
-                    expanded = isGroupingMenuExpanded,
-                    icon = if(state.groupedTasks != null) Icons.Rounded.Clear else Icons.Rounded.Menu,
-                    onExpandedChange = {
-                        if(state.groupedTasks != null) {
-                            event(TasksScreenEvent.UpdateCurrentGrouping(null))
-                        } else {
-                            isGroupingMenuExpanded = it
-                        }
-                   },
-                    dropdownItemList = groupingOptions,
-                    onDropdownItemClick = { item ->
-                        isGroupingMenuExpanded = false
-                        when(item) {
-                            "Group by category" -> { event(TasksScreenEvent.UpdateCurrentGrouping(Grouping.Category)) }
-                            "Group by priority" -> { event(TasksScreenEvent.UpdateCurrentGrouping(Grouping.Priority)) }
-                        }
-                    }
-                )
+    when {
+        state.loading == true -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
             }
         }
-        if(!state.groupedTasks.isNullOrEmpty()) {
-            GroupedTasks(groupedTasks = state.groupedTasks)
-        } else {
-            state.tasks?.let {
-                LazyColumn {
-                    items(it) { task ->
-                        TaskItem(
-                            task = task,
-                            onTaskClick = {}
+
+        !state.error.isNullOrEmpty() -> {
+            Box(modifier = Modifier.fillMaxSize()) {
+                Text(text = "There was an error. Please retry.")
+            }
+        }
+
+        state.tasks.isNullOrEmpty() && state.groupedTasks.isNullOrEmpty() -> {
+            Box(modifier = Modifier.fillMaxSize()) {
+                Text(text = "No tasks found.")
+            }
+        }
+
+        else -> {
+            Column(modifier = Modifier.padding(horizontal = 10.dp)) {
+                Row(
+                    modifier = modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    StatusFilters(
+                        selected = state.selectedStatus ?: Status.TODO.label,
+                        onSelectedChange = { event(TasksScreenEvent.UpdateSelectedStatus(it)) },
+                        onChipClick = { }
+                    )
+                    val sortingOptions = arrayOf("Sort by priority", "Sort by title", "Sort by category")
+                    val groupingOptions = arrayOf("Group by category", "Group by priority")
+
+                    Row {
+                        var isGroupingMenuExpanded by remember { mutableStateOf(false) }
+                        var isSortingMenuExpanded by remember { mutableStateOf(false) }
+                        ActionDropdownMenu(
+                            modifier.size(28.dp),
+                            expanded = isSortingMenuExpanded,
+                            icon = Icons.Default.MoreVert,
+                            onExpandedChange = { isSortingMenuExpanded = it },
+                            dropdownItemList = sortingOptions,
+                            onDropdownItemClick = { item ->
+                                isSortingMenuExpanded = false
+                                when(item) {
+                                    "Sort by priority" -> { event(TasksScreenEvent.UpdateCurrentSorting(Sorting.Priority)) }
+                                    "Sort by title" -> { event(TasksScreenEvent.UpdateCurrentSorting(Sorting.Title)) }
+                                    "Sort by category" -> { event(TasksScreenEvent.UpdateCurrentSorting(Sorting.Category)) }
+                                }
+                            }
                         )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        ActionDropdownMenu(
+                            modifier.size(28.dp),
+                            expanded = isGroupingMenuExpanded,
+                            icon = if(state.groupedTasks != null) Icons.Rounded.Clear else Icons.Rounded.Menu,
+                            onExpandedChange = {
+                                if(state.groupedTasks != null) {
+                                    event(TasksScreenEvent.UpdateCurrentGrouping(null))
+                                } else {
+                                    isGroupingMenuExpanded = it
+                                }
+                            },
+                            dropdownItemList = groupingOptions,
+                            onDropdownItemClick = { item ->
+                                isGroupingMenuExpanded = false
+                                when(item) {
+                                    "Group by category" -> { event(TasksScreenEvent.UpdateCurrentGrouping(Grouping.Category)) }
+                                    "Group by priority" -> { event(TasksScreenEvent.UpdateCurrentGrouping(Grouping.Priority)) }
+                                }
+                            }
+                        )
+                    }
+                }
+                if(!state.groupedTasks.isNullOrEmpty()) {
+                    GroupedTasks(groupedTasks = state.groupedTasks)
+                } else {
+                    state.tasks?.let {
+                        LazyColumn {
+                            items(it) { task ->
+                                TaskItem(
+                                    task = task,
+                                    onTaskClick = {}
+                                )
+                            }
+                        }
                     }
                 }
             }

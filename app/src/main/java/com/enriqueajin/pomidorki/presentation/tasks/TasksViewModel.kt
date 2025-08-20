@@ -3,6 +3,7 @@ package com.enriqueajin.pomidorki.presentation.tasks
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -46,7 +47,7 @@ class TasksViewModel @Inject constructor(): ViewModel() {
 
         if(myFilters.currentGrouping == null) {
             val filteredTasks = applyFilters(tasks, myFilters)
-            state = state.copy(tasks = filteredTasks)
+            state = state.copy(tasks = filteredTasks, loading = false)
         } else {
             val groupedTasks = myFilters.currentGrouping.let { currentGrouping ->
                 when(currentGrouping) {
@@ -60,7 +61,7 @@ class TasksViewModel @Inject constructor(): ViewModel() {
                     applyFilters(value, myFilters)
                 }
             }
-            state = state.copy(groupedTasks = filteredGroup)
+            state = state.copy(groupedTasks = filteredGroup, loading = false)
         }
         state
 
