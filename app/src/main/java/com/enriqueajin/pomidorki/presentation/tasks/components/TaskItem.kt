@@ -1,6 +1,7 @@
 package com.enriqueajin.pomidorki.presentation.tasks.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,22 +32,21 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.enriqueajin.pomidorki.presentation.tasks.Category
-import com.enriqueajin.pomidorki.presentation.tasks.Priority
-import com.enriqueajin.pomidorki.presentation.tasks.Status
 import com.enriqueajin.pomidorki.presentation.tasks.Task
-import com.enriqueajin.pomidorki.presentation.tasks.getRandomDarkColor
+import com.enriqueajin.pomidorki.presentation.tasks.getTasks
 
 @Composable
 fun TaskItem(
     modifier: Modifier = Modifier,
     task: Task,
+    onTaskClick: () -> Unit,
 ) {
     Card(
         modifier = modifier
             .padding(bottom = 10.dp)
             .fillMaxWidth()
-            .height(75.dp),
+            .height(75.dp)
+            .clickable { onTaskClick() },
         shape = RoundedCornerShape(14),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
@@ -128,14 +128,8 @@ fun TaskItem(
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun TaskItemPreview(modifier: Modifier = Modifier) {
-    val task = Task(
-        title = "Study Kotlin",
-        description = "Complete the Kotlin advanced course",
-        targetPomodoros = 3,
-        status = Status.IN_PROGRESS,
-        priority = Priority.HIGH,
-        category = Category("Education", getRandomDarkColor()),
-        dueDate = "Due: 10/05/2025"
+    TaskItem(
+        task = getTasks().first(),
+        onTaskClick = {}
     )
-    TaskItem(task = task)
 }

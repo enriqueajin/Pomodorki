@@ -31,7 +31,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.enriqueajin.pomidorki.presentation.tasks.components.ActionDropdownMenu
 import com.enriqueajin.pomidorki.presentation.tasks.components.StatusFilters
 import com.enriqueajin.pomidorki.presentation.tasks.components.TaskItem
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class Task(
     val title: String,
     val description: String,
@@ -48,9 +51,10 @@ enum class Status(val label: String) {
     DONE("Done")
 }
 
+@Serializable
 data class Category(
     val name: String,
-    val color: Color
+    @Contextual val color: Color
 )
 
 enum class Priority(val hexColor: Long, val priorityValue: Int) {
@@ -144,7 +148,10 @@ private fun TasksScreen(
             state.tasks?.let {
                 LazyColumn {
                     items(it) { task ->
-                        TaskItem(task = task)
+                        TaskItem(
+                            task = task,
+                            onTaskClick = {}
+                        )
                     }
                 }
             }
@@ -164,7 +171,10 @@ fun GroupedTasks(
                     Text(text = category)
                 }
                 items(tasks) { task ->
-                    TaskItem(task = task)
+                    TaskItem(
+                        task = task,
+                        onTaskClick = {}
+                    )
                 }
 
             }
