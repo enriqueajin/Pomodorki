@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -19,6 +19,7 @@ import com.enriqueajin.pomidorki.presentation.pomodoro_settings.PomodoroSettings
 import com.enriqueajin.pomidorki.presentation.stats.StatsScreen
 import com.enriqueajin.pomidorki.presentation.tasks.TasksScreenRoot
 import com.enriqueajin.pomidorki.utils.Constants
+import com.enriqueajin.pomidorki.utils.Constants.screensWithBottomBar
 import com.enriqueajin.pomidorki.utils.Constants.screensWithTopBar
 
 @Composable
@@ -26,9 +27,8 @@ fun MainGraph() {
 
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
-    var selectedItem by remember { mutableStateOf(0) }
+    var selectedItem by remember { mutableIntStateOf(0) }
     val currentRoute = navBackStackEntry?.destination?.route
-    println(currentRoute)
 
     selectedItem = when (currentRoute) {
         Route.Timer.route -> 0
@@ -38,11 +38,8 @@ fun MainGraph() {
     }
 
     val isBottomBarVisible = remember(navBackStackEntry) {
-        navBackStackEntry?.destination?.route == Route.Timer.route ||
-        navBackStackEntry?.destination?.route == Route.Tasks.route ||
-        navBackStackEntry?.destination?.route == Route.Stats.route
+        navBackStackEntry?.destination?.route in screensWithBottomBar
     }
-
 
     Scaffold(
         topBar = {
