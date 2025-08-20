@@ -241,16 +241,6 @@ fun TimerScreen(
         }
     }
 
-    val view = LocalView.current
-    val systemBarColor = NavigationBarDefaults.containerColor
-    val isDarkTheme = isSystemInDarkTheme()
-
-    SideEffect {
-        val window = (view.context as Activity).window
-        window.navigationBarColor = systemBarColor.toArgb()
-        WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = !isDarkTheme
-    }
-
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
     ) { innerPadding ->

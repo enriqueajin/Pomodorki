@@ -34,6 +34,7 @@ object Constants {
     }
 
     val pomodoroTabItems = listOf("Pomodoro", "Short Break", "Long Break")
+    val screensWithTopBar = arrayOf(Route.Timer.route, Route.Settings.route)
 
     // Countdown Timer
     const val ACTION_SERVICE_START = "ACTION_SERVICE_START"

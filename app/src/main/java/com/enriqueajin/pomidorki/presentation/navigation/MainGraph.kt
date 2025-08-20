@@ -19,6 +19,7 @@ import com.enriqueajin.pomidorki.presentation.pomodoro_settings.PomodoroSettings
 import com.enriqueajin.pomidorki.presentation.stats.StatsScreen
 import com.enriqueajin.pomidorki.presentation.tasks.TasksScreenRoot
 import com.enriqueajin.pomidorki.utils.Constants
+import com.enriqueajin.pomidorki.utils.Constants.screensWithTopBar
 
 @Composable
 fun MainGraph() {
@@ -42,9 +43,12 @@ fun MainGraph() {
         navBackStackEntry?.destination?.route == Route.Stats.route
     }
 
+
     Scaffold(
         topBar = {
-
+            if(currentRoute in screensWithTopBar) {
+                EmptyTopBar()
+            }
         },
         bottomBar = {
             AnimatedVisibility(isBottomBarVisible) {
