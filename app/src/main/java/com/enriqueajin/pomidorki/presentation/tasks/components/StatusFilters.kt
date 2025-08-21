@@ -18,7 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.enriqueajin.pomidorki.presentation.tasks.Status
+import com.enriqueajin.pomidorki.domain.model.Status
 
 data class Filter(
     val label: String,

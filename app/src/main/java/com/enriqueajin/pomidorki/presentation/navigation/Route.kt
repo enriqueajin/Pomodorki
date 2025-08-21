@@ -1,6 +1,6 @@
 package com.enriqueajin.pomidorki.presentation.navigation
 
-import com.enriqueajin.pomidorki.presentation.tasks.Task
+import com.enriqueajin.pomidorki.domain.model.Task
 import kotlinx.serialization.Serializable
 
 @Serializable

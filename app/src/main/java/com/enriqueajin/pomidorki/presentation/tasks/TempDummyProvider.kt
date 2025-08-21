@@ -1,6 +1,10 @@
 package com.enriqueajin.pomidorki.presentation.tasks
 
 import androidx.compose.ui.graphics.Color
+import com.enriqueajin.pomidorki.domain.model.Category
+import com.enriqueajin.pomidorki.domain.model.Priority
+import com.enriqueajin.pomidorki.domain.model.Status
+import com.enriqueajin.pomidorki.domain.model.Task
 import kotlin.random.Random
 
 fun getRandomDarkColor(): Color {
