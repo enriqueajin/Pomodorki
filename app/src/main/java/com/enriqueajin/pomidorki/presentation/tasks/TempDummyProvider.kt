@@ -9,10 +9,12 @@ import kotlin.random.Random
 
 fun getRandomDarkColor(): Color {
     val red = Random.nextFloat() * 0.5f
-    val green = Random.nextFloat() * 0.5f
+    val myColor = Random.nextFloat() * 0.5f
     val blue = Random.nextFloat() * 0.5f
-    return Color(red, green, blue, 1f)
+    return Color(red, myColor, blue, 1f)
 }
+
+val myColor = Color.Green
 
 fun getTasks(): List<Task> {
     return listOf(
@@ -22,7 +24,7 @@ fun getTasks(): List<Task> {
             targetPomodoros = 5,
             status = Status.IN_PROGRESS,
             priority = Priority.HIGH,
-            category = Category("Gym", getRandomDarkColor()),
+            category = Category("Gym", myColor),
             dueDate = "01/05/2025"
         ),
         Task(
@@ -31,7 +33,7 @@ fun getTasks(): List<Task> {
             targetPomodoros = 4,
             status = Status.TODO,
             priority = Priority.VERY_HIGH,
-            category = Category("Work", getRandomDarkColor()),
+            category = Category("Work", myColor),
             dueDate = "30/04/2025"
         ),
         Task(
@@ -40,7 +42,7 @@ fun getTasks(): List<Task> {
             targetPomodoros = 3,
             status = Status.IN_PROGRESS,
             priority = Priority.HIGH,
-            category = Category("Education", getRandomDarkColor()),
+            category = Category("Education", myColor),
             dueDate = "10/05/2025"
         ),
         Task(
@@ -49,7 +51,7 @@ fun getTasks(): List<Task> {
             targetPomodoros = 1,
             status = Status.TODO,
             priority = Priority.LOW,
-            category = Category("Personal", getRandomDarkColor()),
+            category = Category("Personal", myColor),
             dueDate = "28/04/2025"
         ),
         Task(
@@ -58,7 +60,7 @@ fun getTasks(): List<Task> {
             targetPomodoros = 2,
             status = Status.IN_PROGRESS,
             priority = Priority.MEDIUM,
-            category = Category("Reading", getRandomDarkColor()),
+            category = Category("Reading", myColor),
             dueDate = "05/05/2025"
         ),
         Task(
@@ -67,7 +69,7 @@ fun getTasks(): List<Task> {
             targetPomodoros = 3,
             status = Status.TODO,
             priority = Priority.HIGH,
-            category = Category("Work", getRandomDarkColor()),
+            category = Category("Work", myColor),
             dueDate = "03/05/2025"
         ),
         Task(
@@ -76,7 +78,7 @@ fun getTasks(): List<Task> {
             targetPomodoros = 2,
             status = Status.TODO,
             priority = Priority.LOW,
-            category = Category("Personal", getRandomDarkColor()),
+            category = Category("Personal", myColor),
             dueDate = "27/04/2025"
         ),
         Task(
@@ -85,7 +87,7 @@ fun getTasks(): List<Task> {
             targetPomodoros = 2,
             status = Status.IN_PROGRESS,
             priority = Priority.MEDIUM,
-            category = Category("Gym", getRandomDarkColor()),
+            category = Category("Gym", myColor),
             dueDate = "02/05/2025"
         ),
         Task(
@@ -94,7 +96,7 @@ fun getTasks(): List<Task> {
             targetPomodoros = 3,
             status = Status.IN_PROGRESS,
             priority = Priority.HIGH,
-            category = Category("Development", getRandomDarkColor()),
+            category = Category("Development", myColor),
             dueDate = "01/05/2025"
         ),
         Task(
@@ -103,7 +105,7 @@ fun getTasks(): List<Task> {
             targetPomodoros = 1,
             status = Status.TODO,
             priority = Priority.LOW,
-            category = Category("Personal", getRandomDarkColor()),
+            category = Category("Personal", myColor),
             dueDate = "26/04/2025"
         ),
         Task(
@@ -112,7 +114,7 @@ fun getTasks(): List<Task> {
             targetPomodoros = 4,
             status = Status.TODO,
             priority = Priority.MEDIUM,
-            category = Category("Hobby", getRandomDarkColor()),
+            category = Category("Hobby", myColor),
             dueDate = "15/05/2025"
         ),
         Task(
@@ -121,7 +123,7 @@ fun getTasks(): List<Task> {
             targetPomodoros = 2,
             status = Status.TODO,
             priority = Priority.MEDIUM,
-            category = Category("Education", getRandomDarkColor()),
+            category = Category("Education", myColor),
             dueDate = "20/05/2025"
         ),
         Task(
@@ -130,7 +132,7 @@ fun getTasks(): List<Task> {
             targetPomodoros = 3,
             status = Status.DONE,
             priority = Priority.MEDIUM,
-            category = Category("Travel", getRandomDarkColor()),
+            category = Category("Travel", myColor),
             dueDate = "05/05/2025"
         ),
         Task(
@@ -139,7 +141,7 @@ fun getTasks(): List<Task> {
             targetPomodoros = 1,
             status = Status.TODO,
             priority = Priority.LOW,
-            category = Category("Wellness", getRandomDarkColor()),
+            category = Category("Wellness", myColor),
             dueDate = "28/04/2025"
         ),
         Task(
@@ -148,7 +150,7 @@ fun getTasks(): List<Task> {
             targetPomodoros = 2,
             status = Status.IN_PROGRESS,
             priority = Priority.HIGH,
-            category = Category("Career", getRandomDarkColor()),
+            category = Category("Career", myColor),
             dueDate = "02/05/2025"
         ),
         Task(
@@ -157,7 +159,7 @@ fun getTasks(): List<Task> {
             targetPomodoros = 1,
             status = Status.DONE,
             priority = Priority.LOW,
-            category = Category("Personal", getRandomDarkColor()),
+            category = Category("Personal", myColor),
             dueDate = "29/04/2025"
         ),
         Task(
@@ -166,7 +168,7 @@ fun getTasks(): List<Task> {
             targetPomodoros = 3,
             status = Status.IN_PROGRESS,
             priority = Priority.HIGH,
-            category = Category("Career", getRandomDarkColor()),
+            category = Category("Career", myColor),
             dueDate = "04/05/2025"
         ),
         Task(
@@ -175,7 +177,7 @@ fun getTasks(): List<Task> {
             targetPomodoros = 2,
             status = Status.TODO,
             priority = Priority.HIGH,
-            category = Category("Development", getRandomDarkColor()),
+            category = Category("Development", myColor),
             dueDate = "07/05/2025"
         ),
         Task(
@@ -184,7 +186,7 @@ fun getTasks(): List<Task> {
             targetPomodoros = 2,
             status = Status.DONE,
             priority = Priority.MEDIUM,
-            category = Category("Family", getRandomDarkColor()),
+            category = Category("Family", myColor),
             dueDate = "03/05/2025"
         ),
         Task(
@@ -193,7 +195,7 @@ fun getTasks(): List<Task> {
             targetPomodoros = 3,
             status = Status.TODO,
             priority = Priority.MEDIUM,
-            category = Category("Education", getRandomDarkColor()),
+            category = Category("Education", myColor),
             dueDate = "18/05/2025"
         ),
         Task(
@@ -202,7 +204,7 @@ fun getTasks(): List<Task> {
             targetPomodoros = 2,
             status = Status.TODO,
             priority = Priority.HIGH,
-            category = Category("Fitness", getRandomDarkColor()),
+            category = Category("Fitness", myColor),
             dueDate = "02/05/2025"
         ),
         Task(
@@ -211,7 +213,7 @@ fun getTasks(): List<Task> {
             targetPomodoros = 4,
             status = Status.IN_PROGRESS,
             priority = Priority.VERY_HIGH,
-            category = Category("Design", getRandomDarkColor()),
+            category = Category("Design", myColor),
             dueDate = "08/05/2025"
         )
     )

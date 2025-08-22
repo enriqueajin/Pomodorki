@@ -151,7 +151,10 @@ fun SuccessScreen(
         } else {
             state.tasks?.let {
                 LazyColumn {
-                    items(it) { task ->
+                    items(
+                        items = it,
+                        key = { item -> item.hashCode() }
+                    ) { task ->
                         TaskItem(
                             task = task,
                             onTaskClick = {}
@@ -175,7 +178,10 @@ fun GroupedTasks(
                 item {
                     Text(text = category)
                 }
-                items(tasks) { task ->
+                items(
+                    items = tasks,
+                    key = { it.hashCode() }
+                ) { task ->
                     TaskItem(
                         task = task,
                         onTaskClick = {}
