@@ -1,7 +1,6 @@
 package com.enriqueajin.pomidorki.presentation.home
 
 import android.Manifest
-import android.app.Activity
 import android.content.Context
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -30,16 +29,13 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -51,10 +47,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
@@ -66,7 +60,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
-import androidx.core.view.WindowCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.enriqueajin.pomidorki.R
@@ -105,7 +98,6 @@ import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_RESET
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_START
 import com.enriqueajin.pomidorki.utils.Constants.pomodoroTabItems
 import com.enriqueajin.pomidorki.utils.TimeFormatter.formatTime
-import com.enriqueajin.pomidorki.utils.toMillis
 
 @Composable
 fun TimerScreenRoot(
@@ -229,12 +221,6 @@ fun TimerScreen(
         }
     }
 
-    val hasTimerEnded by remember(uiState.timeLeft) {
-        derivedStateOf {
-            uiState.timeLeft != null && uiState.timeLeft == 0L
-        }
-    }
-
     LaunchedEffect(uiState.currentState) {
         if(isDialogOpen) {
             isDialogOpen = false
@@ -319,7 +305,7 @@ fun TimerScreen(
                                 .size(197.dp)
                                 .background(pinkPrimary), // Consider if this background is still needed or correct
                             initialValue = 0,
-                            timeLeftMillis = uiState.timeLeft ?: 25.toMillis(),
+                            timeLeftMillis = uiState.timeLeft,
                             arcColor = timerArcColor,
                             timeElapsedArcColor = timeElapsedArcColor,
                             circleRadius = 340f,
@@ -327,7 +313,7 @@ fun TimerScreen(
                             onPositionChange = {}
                         )
                         CountdownView(
-                            formattedText = uiState.timeLeft?.formatTime() ?: "25:00",
+                            formattedText = uiState.timeLeft.formatTime(),
                             textColor = timerTextColor,
                         )
                     }

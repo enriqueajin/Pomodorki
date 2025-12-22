@@ -15,7 +15,6 @@ import com.enriqueajin.pomidorki.data.countdown.CountDownPomodoro
 import com.enriqueajin.pomidorki.data.countdown.ServiceHelper
 import com.enriqueajin.pomidorki.data.model.PomodoroServiceData
 import com.enriqueajin.pomidorki.domain.repository.UserSettingsRepository
-import com.enriqueajin.pomidorki.presentation.UserSettingsState
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_CLOSE
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_IDLE
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_PAUSE
@@ -33,22 +32,18 @@ import com.enriqueajin.pomidorki.utils.Constants.PAUSE_BUTTON_TITLE
 import com.enriqueajin.pomidorki.utils.Constants.RESET_BUTTON_TITLE
 import com.enriqueajin.pomidorki.utils.Constants.RESUME_BUTTON_TITLE
 import com.enriqueajin.pomidorki.utils.Constants.START_BUTTON_TITLE
-import com.enriqueajin.pomidorki.utils.PreferencesKeys.LONG_BREAK_DURATION
-import com.enriqueajin.pomidorki.utils.PreferencesKeys.POMODORO_DURATION
-import com.enriqueajin.pomidorki.utils.PreferencesKeys.SHORT_BREAK_DURATION
 import com.enriqueajin.pomidorki.utils.TimeFormatter.formatTime
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class CountdownService: Service() {
+class CountdownService : Service() {
 
     @Inject
     lateinit var notificationBuilder: NotificationCompat.Builder
@@ -59,7 +54,9 @@ class CountdownService: Service() {
     @Inject
     lateinit var userSettingsRepository: UserSettingsRepository
 
-    private lateinit var countdownTimer: CountDownPomodoro
+    @Inject
+    lateinit var countdownTimer: CountDownPomodoro
+
     private val binder = CountdownBinder()
 
     private val _serviceData = MutableStateFlow(PomodoroServiceData())
@@ -79,56 +76,24 @@ class CountdownService: Service() {
         )
     }
 
-    fun initCountdown(selectedTimerFlow: StateFlow<Int>) {
-        coroutineScope.launch {
-            val initialPomodoroDuration = userSettingsRepository.getSetting(POMODORO_DURATION).toLong()
-            val initialShortBreakDuration = userSettingsRepository.getSetting(SHORT_BREAK_DURATION).toLong()
-            val initialLongBreakDuration = userSettingsRepository.getSetting(LONG_BREAK_DURATION).toLong()
-            val durationSettings = UserSettingsState(
-                pomodoroDuration = initialPomodoroDuration,
-                shortBreakDuration = initialShortBreakDuration,
-                longBreakDuration = initialLongBreakDuration
-            )
+    fun updateSelectedTimer(selectedTimer: Int) {
+        countdownTimer.updateSelectedTimer(selectedTimer)
+    }
 
-            countdownTimer = CountDownPomodoro(
-                durationSettings = durationSettings,
-                context = this@CountdownService,
-                selectedTimer = selectedTimerFlow,
-                onTimerTick = { timeLeft ->
-                    if(timeLeft > 0L) {
-                        updateServiceData(timeLeft = timeLeft)
-                        updateNotification(timeLeft)
-                    } else {
-                        notificationManager.cancel(NOTIFICATION_TICK_ID)
-                        stopForeground(STOP_FOREGROUND_REMOVE)
-                        stopSelf()
-                        notifyTimerOver()
-                    }
-                },
-                onInitialMillisChange = { initialMillis ->
-                    updateServiceData(
-                        initialMillis = initialMillis,
-                        timeLeft = initialMillis
-                    )
+    fun initCountdown() {
+        coroutineScope.launch {
+
+            countdownTimer.timeLeft.collect { timeLeft ->
+                if(timeLeft > 0L) {
+                    updateServiceData(timeLeft = timeLeft)
+                    updateNotification(timeLeft)
+                } else {
+                    notificationManager.cancel(NOTIFICATION_TICK_ID)
+                    stopForeground(STOP_FOREGROUND_REMOVE)
+                    stopSelf()
+                    notifyTimerOver()
                 }
-            )
-            // Set service data initial values
-            updateServiceData(
-                currentState = CountdownState.Idle,
-                timeLeft = countdownTimer.timeLeft.value,
-                initialMillis = countdownTimer.initialMillis
-            )
-            userSettingsRepository.userSettingsFlow.collect { preferences ->
-                val pomodoroDuration = userSettingsRepository.getSetting(preferences, POMODORO_DURATION).toLong()
-                val shortBreakDuration = userSettingsRepository.getSetting(preferences, SHORT_BREAK_DURATION).toLong()
-                val longBreakDuration = userSettingsRepository.getSetting(preferences, LONG_BREAK_DURATION).toLong()
-                countdownTimer.updateDurations(
-                    UserSettingsState(
-                        pomodoroDuration = pomodoroDuration,
-                        shortBreakDuration = shortBreakDuration,
-                        longBreakDuration = longBreakDuration
-                    )
-                )
+                updateServiceData(timeLeft = timeLeft)
             }
         }
     }

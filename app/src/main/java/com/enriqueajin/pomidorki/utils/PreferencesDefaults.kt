@@ -1,5 +1,8 @@
 package com.enriqueajin.pomidorki.utils
 
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.stringPreferencesKey
+
 enum class PreferencesDefaults(val value: String) {
     POMODORO_DURATION("25"),
     SHORT_BREAK_DURATION("5"),
@@ -13,4 +16,11 @@ fun getDefaultPreference(key: String): String {
         PreferencesKeys.LONG_BREAK_DURATION -> PreferencesDefaults.LONG_BREAK_DURATION.value
         else -> PreferencesDefaults.POMODORO_DURATION.value
     }
+}
+
+fun Preferences.getSetting(key: String): String {
+    return safeInvoke {
+        val preferencesKey: Preferences.Key<String> = stringPreferencesKey(key)
+        this[preferencesKey]
+    } ?: getDefaultPreference(key)
 }

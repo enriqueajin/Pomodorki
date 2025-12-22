@@ -5,45 +5,65 @@ import android.os.CountDownTimer
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.enriqueajin.pomidorki.domain.repository.UserSettingsRepository
 import com.enriqueajin.pomidorki.presentation.UserSettingsState
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_IDLE
+import com.enriqueajin.pomidorki.utils.PreferencesKeys.LONG_BREAK_DURATION
+import com.enriqueajin.pomidorki.utils.PreferencesKeys.POMODORO_DURATION
+import com.enriqueajin.pomidorki.utils.PreferencesKeys.SHORT_BREAK_DURATION
+import com.enriqueajin.pomidorki.utils.getSetting
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
+import javax.inject.Inject
 
-class CountDownPomodoro(
-    private val durationSettings: UserSettingsState,
+class CountDownPomodoro @Inject constructor(
     private val context: Context,
-    private val selectedTimer: StateFlow<Int>,
-    private val onTimerTick: (Long) -> Unit,
-    private val onInitialMillisChange: (Long) -> Unit,
+    private val userSettingsRepository: UserSettingsRepository,
 ) {
 
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+
+    private val _selectedTimer = MutableStateFlow(0)
     private var countDownTimer: CountDownTimer? = null
     private val countDownInterval = 1_000L
 
-    private val _durationSettings = MutableStateFlow(durationSettings)
+    private val _durationSettings = MutableStateFlow(UserSettingsState())
 
     private var isActive by mutableStateOf(false)
-    var initialMillis: Long = 0
-        private set
+    private var initialMillis: Long = 0
 
-    private val _timeLeft: MutableStateFlow<Long> = MutableStateFlow(getInitialMillis(selectedTimer.value))
+    private val _timeLeft: MutableStateFlow<Long> = MutableStateFlow(getInitialMillis(_selectedTimer.value))
     val timeLeft = _timeLeft.asStateFlow()
 
     init {
-        selectedTimer
-            .onEach { timerIndex ->
-                _timeLeft.value = getInitialMillis(timerIndex)
+        observeDurationSettings()
+    }
+
+    private fun observeDurationSettings() {
+        scope.launch {
+            userSettingsRepository.userSettingsFlow.collect { pref ->
+                val pomodoro = pref.getSetting(POMODORO_DURATION).toLong()
+                val shortBreak = pref.getSetting(SHORT_BREAK_DURATION).toLong()
+                val longBreak = pref.getSetting(LONG_BREAK_DURATION).toLong()
+                _durationSettings.value = _durationSettings.value.copy(
+                    pomodoroDuration = pomodoro,
+                    shortBreakDuration = shortBreak,
+                    longBreakDuration = longBreak,
+                )
             }
-            .launchIn(CoroutineScope(Dispatchers.IO))
+        }
+    }
+
+    fun updateSelectedTimer(selectedTimer: Int) {
+        println("`Value here selected timer is $selectedTimer")
+        _selectedTimer.value = selectedTimer
+        _timeLeft.value = getInitialMillis(selectedTimer)
     }
 
     fun start() {
@@ -51,19 +71,16 @@ class CountDownPomodoro(
         countDownTimer = object : CountDownTimer(timeLeft.value, countDownInterval) {
             override fun onTick(millisUntilFinished: Long) {
                 _timeLeft.value = millisUntilFinished
-                onTimerTick(millisUntilFinished)
             }
 
             override fun onFinish() {
                 _timeLeft.value = 0L
-                onTimerTick(0L)
                 ServiceHelper.triggerForegroundService(context, ACTION_SERVICE_IDLE)
 
                 // Delay to make sure that timeLeft = 0 first, and then reset to initialMillis
                 CoroutineScope(Dispatchers.Main).launch {
                     delay(100L)
                     _timeLeft.value = initialMillis
-                    onTimerTick(initialMillis)
                     isActive = false
                 }
             }
@@ -79,34 +96,21 @@ class CountDownPomodoro(
         isActive = false
         countDownTimer?.cancel()
         _timeLeft.value = initialMillis
-        onTimerTick(initialMillis)
     }
 
     private fun getInitialMillis(timerIndex: Int): Long {
-        val returningInitialMillis = when (timerIndex) {
-            0 -> {
-                initialMillis = TimeUnit.MINUTES.toMillis(_durationSettings.value.pomodoroDuration)
-                initialMillis
-            }
-            1 -> {
-                initialMillis = TimeUnit.MINUTES.toMillis(_durationSettings.value.shortBreakDuration)
-                initialMillis
-            }
-            2 -> {
-                initialMillis = TimeUnit.MINUTES.toMillis(_durationSettings.value.longBreakDuration)
-                initialMillis
-            }
-            else -> {
-                initialMillis = TimeUnit.MINUTES.toMillis(_durationSettings.value.pomodoroDuration)
-                initialMillis
-            }
+        val millis = when (timerIndex) {
+            0 -> TimeUnit.MINUTES.toMillis(_durationSettings.value.pomodoroDuration)
+            1 -> TimeUnit.MINUTES.toMillis(_durationSettings.value.shortBreakDuration)
+            2 -> TimeUnit.MINUTES.toMillis(_durationSettings.value.longBreakDuration)
+            else -> TimeUnit.MINUTES.toMillis(_durationSettings.value.pomodoroDuration)
         }
-        onInitialMillisChange(returningInitialMillis)
-        return returningInitialMillis
+        initialMillis = millis
+        return initialMillis
     }
 
     fun updateDurations(newDurationSettings: UserSettingsState) {
         _durationSettings.value = newDurationSettings
-        _timeLeft.value = getInitialMillis(selectedTimer.value)
+        _timeLeft.value = getInitialMillis(_selectedTimer.value)
     }
 }
