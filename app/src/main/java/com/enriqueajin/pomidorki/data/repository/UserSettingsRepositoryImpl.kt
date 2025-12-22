@@ -27,10 +27,10 @@ class UserSettingsRepositoryImpl @Inject constructor(
         } ?: getDefaultPreference(key)
     }
 
-    override suspend fun getSetting(preferences: Preferences, key: String): String {
+    override suspend fun Preferences.getSetting(key: String): String {
         return safeInvoke {
             val preferencesKey: Preferences.Key<String> = stringPreferencesKey(key)
-            preferences[preferencesKey]
+            this[preferencesKey]
         } ?: getDefaultPreference(key)
     }
 

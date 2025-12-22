@@ -1,6 +1,7 @@
 package com.enriqueajin.pomidorki.presentation.tasks
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.rounded.Clear
 import androidx.compose.material.icons.rounded.Menu
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -23,42 +25,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.enriqueajin.pomidorki.domain.model.Status
+import com.enriqueajin.pomidorki.domain.model.Task
 import com.enriqueajin.pomidorki.presentation.tasks.components.ActionDropdownMenu
 import com.enriqueajin.pomidorki.presentation.tasks.components.StatusFilters
 import com.enriqueajin.pomidorki.presentation.tasks.components.TaskItem
-
-data class Task(
-    val title: String,
-    val description: String,
-    val targetPomodoros: Int,
-    val status: Status,
-    val priority: Priority,
-    val category: Category,
-    val dueDate: String,
-)
-
-enum class Status(val label: String) {
-    TODO("To-do"),
-    IN_PROGRESS("In progress"),
-    DONE("Done")
-}
-
-data class Category(
-    val name: String,
-    val color: Color
-)
-
-enum class Priority(val hexColor: Long, val priorityValue: Int) {
-    VERY_HIGH(0xFFE74C3C, 1),
-    HIGH(0xFFF5B041, 2),
-    MEDIUM(0xFFF7DC6F, 3),
-    LOW(0xFFA8D5BA, 4),
-}
 
 @Composable
 fun TasksScreenRoot(
@@ -79,11 +54,44 @@ private fun TasksScreen(
     event: (TasksScreenEvent) -> Unit
 ) {
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp)
-    ) {
+    when {
+        state.loading == true -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        }
+
+        !state.error.isNullOrEmpty() -> {
+            Box(modifier = Modifier.fillMaxSize()) {
+                Text(text = "There was an error. Please retry.")
+            }
+        }
+
+        state.tasks.isNullOrEmpty() && state.groupedTasks.isNullOrEmpty() -> {
+            Box(modifier = Modifier.fillMaxSize()) {
+                Text(text = "No tasks found.")
+            }
+        }
+
+        else -> {
+            SuccessScreen(
+                state = state,
+                event = event
+            )
+        }
+    }
+}
+
+@Composable
+fun SuccessScreen(
+    modifier: Modifier = Modifier,
+    state: TasksScreenState,
+    event: (TasksScreenEvent) -> Unit
+) {
+    Column(modifier = Modifier.padding(horizontal = 10.dp)) {
         Row(
             modifier = modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -109,9 +117,9 @@ private fun TasksScreen(
                     onDropdownItemClick = { item ->
                         isSortingMenuExpanded = false
                         when(item) {
-                           "Sort by priority" -> { event(TasksScreenEvent.UpdateCurrentSorting(Sorting.Priority)) }
-                           "Sort by title" -> { event(TasksScreenEvent.UpdateCurrentSorting(Sorting.Title)) }
-                           "Sort by category" -> { event(TasksScreenEvent.UpdateCurrentSorting(Sorting.Category)) }
+                            "Sort by priority" -> { event(TasksScreenEvent.UpdateCurrentSorting(Sorting.Priority)) }
+                            "Sort by title" -> { event(TasksScreenEvent.UpdateCurrentSorting(Sorting.Title)) }
+                            "Sort by category" -> { event(TasksScreenEvent.UpdateCurrentSorting(Sorting.Category)) }
                         }
                     }
                 )
@@ -126,7 +134,7 @@ private fun TasksScreen(
                         } else {
                             isGroupingMenuExpanded = it
                         }
-                   },
+                    },
                     dropdownItemList = groupingOptions,
                     onDropdownItemClick = { item ->
                         isGroupingMenuExpanded = false
@@ -143,13 +151,20 @@ private fun TasksScreen(
         } else {
             state.tasks?.let {
                 LazyColumn {
-                    items(it) { task ->
-                        TaskItem(task = task)
+                    items(
+                        items = it,
+                        key = { item -> item.hashCode() }
+                    ) { task ->
+                        TaskItem(
+                            task = task,
+                            onTaskClick = {}
+                        )
                     }
                 }
             }
         }
     }
+
 }
 
 @Composable
@@ -163,8 +178,14 @@ fun GroupedTasks(
                 item {
                     Text(text = category)
                 }
-                items(tasks) { task ->
-                    TaskItem(task = task)
+                items(
+                    items = tasks,
+                    key = { it.hashCode() }
+                ) { task ->
+                    TaskItem(
+                        task = task,
+                        onTaskClick = {}
+                    )
                 }
 
             }

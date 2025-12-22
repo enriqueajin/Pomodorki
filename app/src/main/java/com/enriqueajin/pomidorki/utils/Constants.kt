@@ -14,19 +14,19 @@ object Constants {
         return listOf(
             BottomNavigationItem(
                 text = "Timer",
-                route = Route.Timer,
+                route = Route.Timer.route,
                 selectedItem = ImageVector.vectorResource(R.drawable.filled_timer),
                 unselectedItem = ImageVector.vectorResource(R.drawable.outlined_timer),
             ),
             BottomNavigationItem(
                 text = "Tasks",
-                route = Route.Tasks,
+                route = Route.Tasks.route,
                 selectedItem = ImageVector.vectorResource(R.drawable.filled_task),
                 unselectedItem = ImageVector.vectorResource(R.drawable.outlined_task),
             ),
             BottomNavigationItem(
                 text = "Stats",
-                route = Route.Stats,
+                route = Route.Stats.route,
                 selectedItem = ImageVector.vectorResource(R.drawable.filled_stats),
                 unselectedItem = ImageVector.vectorResource(R.drawable.outlined_stats),
             ),
@@ -34,6 +34,12 @@ object Constants {
     }
 
     val pomodoroTabItems = listOf("Pomodoro", "Short Break", "Long Break")
+    val screensWithTopBar = arrayOf(Route.Timer.route, Route.Settings.route)
+    val screensWithBottomBar = arrayOf(
+        Route.Timer.route,
+        Route.Tasks.route,
+        Route.Stats.route
+    )
 
     // Countdown Timer
     const val ACTION_SERVICE_START = "ACTION_SERVICE_START"

@@ -2,76 +2,48 @@ package com.enriqueajin.pomidorki.presentation.tasks
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.enriqueajin.pomidorki.domain.model.Task
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 @HiltViewModel
-class TasksViewModel @Inject constructor(): ViewModel() {
+class TasksViewModel @Inject constructor() : ViewModel() {
 
     private val tasksFlow = flowOf(getTasks())
 
     private val _filters = MutableStateFlow(TasksFilters())
 
-    private fun applyFilters(
-        tasks: List<Task>,
-        filters: TasksFilters
-    ): List<Task> {
-        return tasks
-            .filter { task ->
-                filters.selectedStatus.let { task.status.label == it }
-            }
-            .sortedWith(
-                when(filters.currentSorting) {
-                    Sorting.Category -> compareBy { it.category.name }
-                    Sorting.Priority -> compareBy { it.priority.priorityValue }
-                    Sorting.Title -> compareBy { it.title }
-                }
-            )
-    }
-
     val uiState: StateFlow<TasksScreenState> = combine(
-        tasksFlow,
+        tasksFlow.distinctUntilChanged(),
         _filters
     ) { tasks, myFilters ->
-        var state = TasksScreenState(
-            isDropdownExpanded = myFilters.isDropdownExpanded,
-            selectedStatus = myFilters.selectedStatus
-        )
 
-        if(myFilters.currentGrouping == null) {
-            val filteredTasks = applyFilters(tasks, myFilters)
-            state = state.copy(tasks = filteredTasks)
-        } else {
-            val groupedTasks = myFilters.currentGrouping.let { currentGrouping ->
-                when(currentGrouping) {
-                    Grouping.Category -> tasks.groupBy { it.category.name }
-                    Grouping.Priority -> tasks.groupBy { it.priority.name }
-                }
-            }
-            val filteredGroup = groupedTasks?.let { taskMap ->
-                taskMap.mapValues { (key, value) ->
+        val filteredTasks = applyFilters(tasks, myFilters)
 
-                    applyFilters(value, myFilters)
-                }
+        val groupedTasks = myFilters.currentGrouping?.let { grouping ->
+            when (grouping) {
+                Grouping.Category -> filteredTasks.groupBy { it.category.name }
+                Grouping.Priority -> filteredTasks.groupBy { it.priority.name }
             }
-            state = state.copy(groupedTasks = filteredGroup)
         }
-        state
+
+        TasksScreenState(
+            isDropdownExpanded = myFilters.isDropdownExpanded,
+            selectedStatus = myFilters.selectedStatus,
+            tasks = filteredTasks,
+            groupedTasks = groupedTasks,
+            loading = false
+        )
 
     }.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(),
-        initialValue = TasksScreenState()
+        started = SharingStarted.WhileSubscribed(5000L),
+        initialValue = TasksScreenState(loading = true)
     )
 
     fun onEvent(event: TasksScreenEvent) {
-        when(event) {
+        when (event) {
             is TasksScreenEvent.UpdateSelectedStatus -> updateSelectedStatus(event.status)
             is TasksScreenEvent.SetDropdownExpanded -> setDropdownExpanded(event.expanded)
             is TasksScreenEvent.UpdateCurrentGrouping -> updateCurrentGrouping(event.grouping)
@@ -79,6 +51,20 @@ class TasksViewModel @Inject constructor(): ViewModel() {
         }
     }
 
+    private fun applyFilters(
+        tasks: List<Task>,
+        filters: TasksFilters
+    ): List<Task> {
+        return tasks
+            .filter { task -> task.status.label == filters.selectedStatus }
+            .let { filtered ->
+                when (filters.currentSorting) {
+                    Sorting.Category -> filtered.sortedBy { it.category.name }
+                    Sorting.Priority -> filtered.sortedBy { it.priority.priorityValue }
+                    Sorting.Title -> filtered.sortedBy { it.title }
+                }
+            }
+    }
 
     private fun updateSelectedStatus(status: String) {
         _filters.value = _filters.value.copy(

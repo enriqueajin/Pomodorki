@@ -6,6 +6,6 @@ import kotlinx.coroutines.flow.Flow
 interface UserSettingsRepository {
     val userSettingsFlow: Flow<Preferences>
     suspend fun getSetting(key: String): String
-    suspend fun getSetting(preferences: Preferences, key: String): String
+    suspend fun Preferences.getSetting(key: String): String
     suspend fun saveSetting(key: String, value: String)
 }

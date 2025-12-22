@@ -10,7 +10,7 @@ import androidx.compose.runtime.Composable
 fun BottomNavigation(
     items: List<BottomNavigationItem>,
     selectedItem: Int,
-    onItemClick: (Route) -> Unit
+    onItemClick: (String) -> Unit
 ) {
     NavigationBar {
         items.forEachIndexed { index, item ->

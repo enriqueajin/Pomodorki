@@ -40,10 +40,16 @@ class TimerServiceRepositoryImpl @Inject constructor(
             countDownService = binder.getService()
 
             countDownService?.let { countdownService ->
-                countdownService.initCountdown(selectedTimer)
+                countdownService.initCountdown()
                 coroutineScope.launch {
                     countdownService.serviceData.collect { data ->
                         _serviceData.value = data
+                    }
+
+                }
+                coroutineScope.launch {
+                    _selectedTimer.collect { selectedTimer ->
+                        countdownService.updateSelectedTimer(selectedTimer)
                     }
                 }
             }

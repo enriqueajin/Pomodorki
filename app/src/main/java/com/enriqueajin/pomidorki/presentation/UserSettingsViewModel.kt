@@ -19,9 +19,9 @@ class UserSettingsViewModel @Inject constructor(
 ) : ViewModel() {
 
     val userSettingsState = userSettingsRepository.userSettingsFlow.map { preferences ->
-        val pomodoroDuration = userSettingsRepository.getSetting(preferences, POMODORO_DURATION)
-        val shortBreakDuration = userSettingsRepository.getSetting(preferences, SHORT_BREAK_DURATION)
-        val longBreakDuration = userSettingsRepository.getSetting(preferences, LONG_BREAK_DURATION)
+        val pomodoroDuration = userSettingsRepository.getSetting(POMODORO_DURATION)
+        val shortBreakDuration = userSettingsRepository.getSetting(SHORT_BREAK_DURATION)
+        val longBreakDuration = userSettingsRepository.getSetting(LONG_BREAK_DURATION)
         UserSettingsState(
             pomodoroDuration = pomodoroDuration.toLong(),
             shortBreakDuration = shortBreakDuration.toLong(),
@@ -32,10 +32,6 @@ class UserSettingsViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = UserSettingsState()
     )
-
-    suspend fun getSetting(key: String) {
-        userSettingsRepository.getSetting(key)
-    }
 
     fun onUserSettingsEvent(event: UserSettingsEvent) {
         when(event) {
