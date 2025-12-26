@@ -9,6 +9,7 @@ object PreferencesKeys {
     val POMODORO_DURATION = "pomodoro_duration"
     val SHORT_BREAK_DURATION = "short_break_duration"
     val LONG_BREAK_DURATION = "long_break_duration"
+    val SELECTED_TIMER = "selected_timer"
 
     val preferencesDefaults = mapOf(
         POMODORO_DURATION to "25",

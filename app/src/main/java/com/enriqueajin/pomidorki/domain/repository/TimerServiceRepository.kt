@@ -5,8 +5,8 @@ import kotlinx.coroutines.flow.StateFlow
 
 interface TimerServiceRepository {
 
-    val serviceData: StateFlow<PomodoroServiceData>
     fun bindTimerService()
     fun unbindTimerService()
     fun setSelectedTimer(selected: Int)
+    fun getServiceData(): StateFlow<PomodoroServiceData>
 }

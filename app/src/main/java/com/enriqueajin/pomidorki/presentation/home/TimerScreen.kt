@@ -122,33 +122,33 @@ fun TimerScreen(
     val context = LocalContext.current
     var selected by rememberSaveable { mutableIntStateOf(0) }
     var tabToConfirm by rememberSaveable { mutableIntStateOf(0) }
-    val backgroundColor = remember(selected) {
-        when (selected) {
+    val backgroundColor = remember(uiState.selectedTimer) {
+        when (uiState.selectedTimer) {
             0 -> pinkPrimary
             1 -> shortBreakBackground
             2 -> longBreakBackground
             else -> pinkPrimary
         }
     }
-    val containerColor = remember(selected) {
-        when (selected) {
+    val containerColor = remember(uiState.selectedTimer) {
+        when (uiState.selectedTimer) {
             0 -> pinkSecondary
             1 -> shortBreakPickerContainer
             2 -> longBreakPickerContainer
             else -> pinkSecondary
         }
     }
-    val indicatorColor = remember(selected) {
-        when (selected) {
+    val indicatorColor = remember(uiState.selectedTimer) {
+        when (uiState.selectedTimer) {
             0 -> darkPink
             1 -> shortBreakPickerIndicator
             2 -> longBreakPickerIndicator
             else -> pinkSecondary
         }
     }
-    val timerArcColor by remember(selected) {
+    val timerArcColor by remember(uiState.selectedTimer) {
         derivedStateOf {
-            when (selected) {
+            when (uiState.selectedTimer) {
                 0 -> pinkSecondary
                 1 -> shortBreakArcBar
                 2 -> longBreakArcBar
@@ -161,8 +161,8 @@ fun TimerScreen(
     } else {
         lightGrayPomodoro
     }
-    val lightThemeTimerTextColor = remember(selected) {
-        when (selected) {
+    val lightThemeTimerTextColor = remember(uiState.selectedTimer) {
+        when (uiState.selectedTimer) {
             0 -> darkPink
             1 -> shortBreakTimerText
             2 -> longBreakTimerText
@@ -264,20 +264,19 @@ fun TimerScreen(
                     Spacer(modifier = Modifier.height(10.dp))
                     TimerPicker(
                         modifier = Modifier.padding(horizontal = 30.dp),
-                        selected = selected,
+                        selected = uiState.selectedTimer,
                         items = pomodoroTabItems,
                         containerColor = containerColor,
                         indicatorColor = indicatorColor,
                         onTabSelected = { index ->
                             when (uiState.currentState) {
                                 CountdownState.Started, CountdownState.Paused -> {
-                                    if(selected != index) {
+                                    if(uiState.selectedTimer != index) {
                                         tabToConfirm = index
                                         isDialogOpen = true
                                     }
                                 }
                                 else -> {
-                                    selected = index
                                     event(TimerScreenEvent.UpdateSelectedTimer(index))
                                 }
                             }
@@ -444,7 +443,6 @@ fun TimerScreen(
                             onClick = {
                                 val action = when(uiState.currentState) {
                                     CountdownState.Started, CountdownState.Paused -> {
-                                        selected = tabToConfirm
                                         event(TimerScreenEvent.UpdateSelectedTimer(tabToConfirm))
                                         ACTION_SERVICE_CLOSE
                                     }
