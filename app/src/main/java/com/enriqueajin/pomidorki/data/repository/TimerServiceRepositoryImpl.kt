@@ -15,6 +15,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -29,10 +30,10 @@ class TimerServiceRepositoryImpl @Inject constructor(
     private val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     private val _selectedTimer = MutableStateFlow(0)
-    val selectedTimer = _selectedTimer.asStateFlow()
 
     private val _serviceData = MutableStateFlow(PomodoroServiceData())
-    override val serviceData = _serviceData.asStateFlow()
+
+    override fun getServiceData(): StateFlow<PomodoroServiceData> = _serviceData.asStateFlow()
 
     private val connection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
@@ -45,7 +46,6 @@ class TimerServiceRepositoryImpl @Inject constructor(
                     countdownService.serviceData.collect { data ->
                         _serviceData.value = data
                     }
-
                 }
                 coroutineScope.launch {
                     _selectedTimer.collect { selectedTimer ->

@@ -26,20 +26,18 @@ class CountDownPomodoro @Inject constructor(
     private val context: Context,
     private val userSettingsRepository: UserSettingsRepository,
 ) {
-
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
-    private val _selectedTimer = MutableStateFlow(0)
     private var countDownTimer: CountDownTimer? = null
-    private val countDownInterval = 1_000L
 
+    private val _selectedTimer = MutableStateFlow(0)
     private val _durationSettings = MutableStateFlow(UserSettingsState())
+    private val _timeLeft: MutableStateFlow<Long> = MutableStateFlow(getInitialMillis(_selectedTimer.value))
+    val timeLeft = _timeLeft.asStateFlow()
 
     private var isActive by mutableStateOf(false)
     private var initialMillis: Long = 0
-
-    private val _timeLeft: MutableStateFlow<Long> = MutableStateFlow(getInitialMillis(_selectedTimer.value))
-    val timeLeft = _timeLeft.asStateFlow()
+    private val countDownInterval = 1_000L
 
     init {
         observeDurationSettings()
@@ -60,12 +58,6 @@ class CountDownPomodoro @Inject constructor(
         }
     }
 
-    fun updateSelectedTimer(selectedTimer: Int) {
-        println("`Value here selected timer is $selectedTimer")
-        _selectedTimer.value = selectedTimer
-        _timeLeft.value = getInitialMillis(selectedTimer)
-    }
-
     fun start() {
         isActive = true
         countDownTimer = object : CountDownTimer(timeLeft.value, countDownInterval) {
@@ -78,7 +70,7 @@ class CountDownPomodoro @Inject constructor(
                 ServiceHelper.triggerForegroundService(context, ACTION_SERVICE_IDLE)
 
                 // Delay to make sure that timeLeft = 0 first, and then reset to initialMillis
-                CoroutineScope(Dispatchers.Main).launch {
+                scope.launch {
                     delay(100L)
                     _timeLeft.value = initialMillis
                     isActive = false
@@ -99,18 +91,17 @@ class CountDownPomodoro @Inject constructor(
     }
 
     private fun getInitialMillis(timerIndex: Int): Long {
-        val millis = when (timerIndex) {
+        initialMillis = when (timerIndex) {
             0 -> TimeUnit.MINUTES.toMillis(_durationSettings.value.pomodoroDuration)
             1 -> TimeUnit.MINUTES.toMillis(_durationSettings.value.shortBreakDuration)
             2 -> TimeUnit.MINUTES.toMillis(_durationSettings.value.longBreakDuration)
             else -> TimeUnit.MINUTES.toMillis(_durationSettings.value.pomodoroDuration)
         }
-        initialMillis = millis
         return initialMillis
     }
 
-    fun updateDurations(newDurationSettings: UserSettingsState) {
-        _durationSettings.value = newDurationSettings
-        _timeLeft.value = getInitialMillis(_selectedTimer.value)
+    fun updateSelectedTimer(selectedTimer: Int) {
+        _selectedTimer.value = selectedTimer
+        _timeLeft.value = getInitialMillis(selectedTimer)
     }
 }

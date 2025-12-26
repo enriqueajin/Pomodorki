@@ -37,7 +37,7 @@ class UserSettingsViewModel @Inject constructor(
         when(event) {
             is UserSettingsEvent.UpdatePomodoroDuration -> {
                 viewModelScope.launch {
-                    userSettingsRepository.saveSetting(
+                    userSettingsRepository.saveString(
                         key = POMODORO_DURATION,
                         value = event.minutes.toString()
                     )
@@ -45,7 +45,7 @@ class UserSettingsViewModel @Inject constructor(
             }
             is UserSettingsEvent.UpdateShortBreakDuration -> {
                 viewModelScope.launch {
-                    userSettingsRepository.saveSetting(
+                    userSettingsRepository.saveString(
                         key = SHORT_BREAK_DURATION,
                         value = event.minutes.toString()
                     )
@@ -53,7 +53,7 @@ class UserSettingsViewModel @Inject constructor(
             }
             is UserSettingsEvent.UpdateLongBreakDuration -> {
                 viewModelScope.launch {
-                    userSettingsRepository.saveSetting(
+                    userSettingsRepository.saveString(
                         key = LONG_BREAK_DURATION,
                         value = event.minutes.toString()
                     )

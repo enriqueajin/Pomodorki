@@ -64,25 +64,8 @@ class CountdownService : Service() {
 
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
 
-    private fun updateServiceData(
-        currentState: CountdownState? = null,
-        timeLeft: Long? = null,
-        initialMillis: Long? = null,
-    ) {
-        _serviceData.value = _serviceData.value.copy(
-            currentState = currentState ?: _serviceData.value.currentState,
-            timeLeft = timeLeft ?: _serviceData.value.timeLeft,
-            initialMillis = initialMillis ?: _serviceData.value.initialMillis
-        )
-    }
-
-    fun updateSelectedTimer(selectedTimer: Int) {
-        countdownTimer.updateSelectedTimer(selectedTimer)
-    }
-
     fun initCountdown() {
         coroutineScope.launch {
-
             countdownTimer.timeLeft.collect { timeLeft ->
                 if(timeLeft > 0L) {
                     updateServiceData(timeLeft = timeLeft)
@@ -93,7 +76,6 @@ class CountdownService : Service() {
                     stopSelf()
                     notifyTimerOver()
                 }
-                updateServiceData(timeLeft = timeLeft)
             }
         }
     }
@@ -139,6 +121,18 @@ class CountdownService : Service() {
         startForeground(
             NOTIFICATION_TICK_ID,
             notificationBuilder.build()
+        )
+    }
+
+    private fun updateServiceData(
+        currentState: CountdownState? = null,
+        timeLeft: Long? = null,
+        initialMillis: Long? = null,
+    ) {
+        _serviceData.value = _serviceData.value.copy(
+            currentState = currentState ?: _serviceData.value.currentState,
+            timeLeft = timeLeft ?: _serviceData.value.timeLeft,
+            initialMillis = initialMillis ?: _serviceData.value.initialMillis
         )
     }
 
@@ -190,6 +184,10 @@ class CountdownService : Service() {
         notificationManager.cancel(NOTIFICATION_TICK_ID)
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
+    }
+
+    fun updateSelectedTimer(selectedTimer: Int) {
+        countdownTimer.updateSelectedTimer(selectedTimer)
     }
 
     private fun setStartedActions() {
