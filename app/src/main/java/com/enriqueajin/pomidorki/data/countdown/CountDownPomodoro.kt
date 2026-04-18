@@ -26,7 +26,7 @@ class CountDownPomodoro @Inject constructor(
     private val context: Context,
     private val userSettingsRepository: UserSettingsRepository,
 ) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private var countDownTimer: CountDownTimer? = null
 

@@ -5,53 +5,64 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.enriqueajin.pomidorki.data.countdown.ServiceHelper
+import com.enriqueajin.pomidorki.data.model.PomodoroServiceData
+import com.enriqueajin.pomidorki.data.services.CountdownService
 import com.enriqueajin.pomidorki.data.services.CountdownState
-import com.enriqueajin.pomidorki.domain.repository.TimerServiceRepository
 import com.enriqueajin.pomidorki.domain.repository.UserSettingsRepository
 import com.enriqueajin.pomidorki.utils.PreferencesKeys.SELECTED_TIMER
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
+import com.enriqueajin.pomidorki.presentation.home.TimerScreenContract.State
+import com.enriqueajin.pomidorki.presentation.home.TimerScreenContract.Effect
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class TimerScreenViewModel @Inject constructor(
-    private val timerServiceRepository: TimerServiceRepository,
     private val userSettingsRepository: UserSettingsRepository,
 ): ViewModel() {
 
-    private val _uiState = MutableStateFlow(TimerScreenState())
+    private val _uiState = MutableStateFlow(State())
     val uiState = _uiState.asStateFlow()
 
+    private val _uiEffects = Channel<Effect>()
+    val uiEffects = _uiEffects.receiveAsFlow()
+
     init {
-        timerServiceRepository.bindTimerService()
-        observeServiceData()
         checkInitialSelectedTimer()
     }
 
+    fun onServiceConnected(service: CountdownService) {
+        println("onServiceConnected was called!")
+        service.observeTimeLeft()
+        viewModelScope.launch {
+            service.serviceData.collect(::updateStateServiceData)
+        }
+    }
+
+    private fun updateStateServiceData(data: PomodoroServiceData) {
+        _uiState.update {
+            it.copy(
+                currentState = data.currentState,
+                timeLeft = data.timeLeft,
+                initialMillis = data.initialMillis,
+                selectedTimer = data.selectedTimer,
+            )
+        }
+    }
+
     private fun checkInitialSelectedTimer() {
-        println("The current state is ${_uiState.value.currentState}")
-        if(_uiState.value.currentState == CountdownState.Started ||
-            _uiState.value.currentState == CountdownState.Paused) {
+        if(_uiState.value.hasTimerStarted()) {
             viewModelScope.launch {
                 val preferences = userSettingsRepository.userSettingsFlow.first()
                 val key = intPreferencesKey(SELECTED_TIMER)
                 val storedSelectedTimer = preferences[key] ?: 0
-                _uiState.value = _uiState.value.copy(selectedTimer = storedSelectedTimer)
-            }
-        }
-    }
-
-    private fun observeServiceData() {
-        viewModelScope.launch {
-            timerServiceRepository.getServiceData().collect { data ->
-                _uiState.value = _uiState.value.copy(
-                    currentState = data.currentState,
-                    timeLeft = data.timeLeft,
-                    initialMillis = data.initialMillis
-                )
+                _uiState.update { it.copy(selectedTimer = storedSelectedTimer) }
             }
         }
     }
@@ -64,9 +75,9 @@ class TimerScreenViewModel @Inject constructor(
     }
 
     private fun updateSelectedTimer(selected: Int) {
+        _uiEffects.trySend(Effect.UpdateSelectedTimer(selected))
         updateDataStore(selected)
-        _uiState.value = _uiState.value.copy(selectedTimer = selected)
-        timerServiceRepository.setSelectedTimer(selected)
+        _uiState.update { it.copy(selectedTimer = selected) }
     }
 
     private fun updateDataStore(selectedTimer: Int) {
@@ -82,9 +93,5 @@ class TimerScreenViewModel @Inject constructor(
         ServiceHelper.triggerForegroundService(context, action)
     }
 
-
-    override fun onCleared() {
-        super.onCleared()
-        timerServiceRepository.unbindTimerService()
-    }
+    private fun State.hasTimerStarted(): Boolean = currentState == CountdownState.Started || currentState == CountdownState.Paused
 }

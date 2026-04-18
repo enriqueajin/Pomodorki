@@ -20,6 +20,7 @@ import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_IDLE
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_PAUSE
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_RESET
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_START
+import com.enriqueajin.pomidorki.utils.Constants.ACTION_TIMER_TYPE
 import com.enriqueajin.pomidorki.utils.Constants.CLOSE_BUTTON_TITLE
 import com.enriqueajin.pomidorki.utils.Constants.COUNTDOWN_STATE
 import com.enriqueajin.pomidorki.utils.Constants.NOTIFICATION_TICK_CHANNEL_ID
@@ -39,6 +40,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -62,15 +64,16 @@ class CountdownService : Service() {
     private val _serviceData = MutableStateFlow(PomodoroServiceData())
     val serviceData = _serviceData.asStateFlow()
 
-    private val coroutineScope = CoroutineScope(Dispatchers.IO)
+    private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
-    fun initCountdown() {
+    fun observeTimeLeft() {
         coroutineScope.launch {
             countdownTimer.timeLeft.collect { timeLeft ->
                 if(timeLeft > 0L) {
                     updateServiceData(timeLeft = timeLeft)
                     updateNotification(timeLeft)
-                } else {
+                } else if (_serviceData.value.currentState == CountdownState.Started) {
+                    updateServiceData(timeLeft = 0L, currentState = CountdownState.Idle)
                     notificationManager.cancel(NOTIFICATION_TICK_ID)
                     stopForeground(STOP_FOREGROUND_REMOVE)
                     stopSelf()
@@ -87,6 +90,12 @@ class CountdownService : Service() {
         val action =
             intent?.action ?: // when triggered by the UI
             intent?.getStringExtra(COUNTDOWN_STATE) // When trigger by the notification
+
+        if (intent?.hasExtra(ACTION_TIMER_TYPE) == true) {
+            val timerType = intent.getIntExtra(ACTION_TIMER_TYPE, _serviceData.value.selectedTimer)
+            updateSelectedTimer(timerType)
+            updateServiceData(selectedTimer = timerType)
+        }
 
         println("Intent: ${intent?.action}")
         println("Intent: ${intent?.getStringExtra(COUNTDOWN_STATE)}")
@@ -128,12 +137,16 @@ class CountdownService : Service() {
         currentState: CountdownState? = null,
         timeLeft: Long? = null,
         initialMillis: Long? = null,
+        selectedTimer: Int? = null,
     ) {
-        _serviceData.value = _serviceData.value.copy(
-            currentState = currentState ?: _serviceData.value.currentState,
-            timeLeft = timeLeft ?: _serviceData.value.timeLeft,
-            initialMillis = initialMillis ?: _serviceData.value.initialMillis
-        )
+        _serviceData.update {
+            it.copy(
+                currentState = currentState ?: it.currentState,
+                timeLeft = timeLeft ?: it.timeLeft,
+                initialMillis = initialMillis ?: it.initialMillis,
+                selectedTimer = selectedTimer ?: it.selectedTimer
+            )
+        }
     }
 
     private fun createNotificationChannels() {
@@ -188,6 +201,7 @@ class CountdownService : Service() {
 
     fun updateSelectedTimer(selectedTimer: Int) {
         countdownTimer.updateSelectedTimer(selectedTimer)
+        updateServiceData(selectedTimer = selectedTimer)
     }
 
     private fun setStartedActions() {
