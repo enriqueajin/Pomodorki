@@ -1,9 +1,12 @@
 *.iml
-.gradle
+## Gradle caches (root + all submodules)
+.gradle/
+.kotlin/
 /local.properties
 /.idea/
 .DS_Store
-/build
+## Build outputs (root + all submodules)
+build/
 /captures
 .externalNativeBuild
 .cxx

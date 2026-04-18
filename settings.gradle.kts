@@ -21,4 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Pomidorki"
 include(":app")
- 
+include(":shared:design-system")
