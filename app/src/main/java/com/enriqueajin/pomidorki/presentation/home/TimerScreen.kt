@@ -2,7 +2,9 @@ package com.enriqueajin.pomidorki.presentation.home
 
 import android.Manifest
 import android.content.Context
+import android.content.Intent
 import android.os.Build
+import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -64,8 +66,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.enriqueajin.pomidorki.R
 import com.enriqueajin.pomidorki.data.countdown.ServiceHelper
+import com.enriqueajin.pomidorki.data.services.CountdownService
 import com.enriqueajin.pomidorki.data.services.CountdownState
 import com.enriqueajin.pomidorki.presentation.MainActivity
+import com.enriqueajin.pomidorki.presentation.home.TimerScreenContract.Effect
+import com.enriqueajin.pomidorki.presentation.home.TimerScreenContract.State
 import com.enriqueajin.pomidorki.presentation.home.components.CountdownView
 import com.enriqueajin.pomidorki.presentation.home.components.PomodoroCountdown
 import com.enriqueajin.pomidorki.presentation.home.components.TimerButton
@@ -96,15 +101,30 @@ import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_CLOSE
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_PAUSE
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_RESET
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_START
+import com.enriqueajin.pomidorki.utils.Constants.ACTION_TIMER_TYPE
 import com.enriqueajin.pomidorki.utils.Constants.pomodoroTabItems
 import com.enriqueajin.pomidorki.utils.TimeFormatter.formatTime
 
 @Composable
 fun TimerScreenRoot(
-    timerScreenViewModel: TimerScreenViewModel = hiltViewModel(),
+    timerScreenViewModel: TimerScreenViewModel = hiltViewModel(viewModelStoreOwner = LocalContext.current as ComponentActivity),
     onSettingsIconClick: () -> Unit,
 ) {
     val uiState by timerScreenViewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        timerScreenViewModel.uiEffects.collect { effect ->
+            when(effect) {
+                is Effect.UpdateSelectedTimer -> {
+                    val intent = Intent(context, CountdownService::class.java).apply {
+                        putExtra(ACTION_TIMER_TYPE, effect.selected)
+                    }
+                    context.startService(intent)
+                }
+            }
+        }
+    }
 
     TimerScreen(
         event = timerScreenViewModel::onEvent,
@@ -116,7 +136,7 @@ fun TimerScreenRoot(
 @Composable
 fun TimerScreen(
     event: (TimerScreenEvent) -> Unit,
-    uiState: TimerScreenState,
+    uiState: State,
     onSettingsIconClick: () -> Unit
 ) {
     val context = LocalContext.current
@@ -494,7 +514,7 @@ private fun startCountdownTimerService(
 fun TimerScreenPreview() {
     TimerScreen(
         event = {},
-        uiState = TimerScreenState(),
+        uiState = State(),
         onSettingsIconClick = {}
     )
 }
