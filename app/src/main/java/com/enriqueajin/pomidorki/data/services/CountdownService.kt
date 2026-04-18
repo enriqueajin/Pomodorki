@@ -68,6 +68,11 @@ class CountdownService : Service() {
 
     fun observeTimeLeft() {
         coroutineScope.launch {
+            countdownTimer.initialMillis.collect { initialMillis ->
+                updateServiceData(initialMillis = initialMillis)
+            }
+        }
+        coroutineScope.launch {
             countdownTimer.timeLeft.collect { timeLeft ->
                 if(timeLeft > 0L) {
                     updateServiceData(timeLeft = timeLeft)

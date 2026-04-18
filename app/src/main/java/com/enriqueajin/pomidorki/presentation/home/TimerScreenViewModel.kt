@@ -25,6 +25,7 @@ import javax.inject.Inject
 @HiltViewModel
 class TimerScreenViewModel @Inject constructor(
     private val userSettingsRepository: UserSettingsRepository,
+    private val timerUiMapper: TimerUiMapper,
 ): ViewModel() {
 
     private val _uiState = MutableStateFlow(State())
@@ -52,6 +53,11 @@ class TimerScreenViewModel @Inject constructor(
                 timeLeft = data.timeLeft,
                 initialMillis = data.initialMillis,
                 selectedTimer = data.selectedTimer,
+                timerProgress = timerUiMapper.formatProgress(
+                    timeLeftMillis = data.timeLeft,
+                    initialMillis = data.initialMillis,
+                ),
+                timerText = timerUiMapper.formatTimerText(data.timeLeft),
             )
         }
     }

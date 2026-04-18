@@ -64,6 +64,8 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.enriqueajin.pomidorki.designsystem.components.timerprogressindicator.TimerProgressIndicator
+import com.enriqueajin.pomidorki.designsystem.components.timerprogressindicator.TimerProgressIndicatorDefaults
 import com.enriqueajin.pomidorki.R
 import com.enriqueajin.pomidorki.data.countdown.ServiceHelper
 import com.enriqueajin.pomidorki.data.services.CountdownService
@@ -71,8 +73,6 @@ import com.enriqueajin.pomidorki.data.services.CountdownState
 import com.enriqueajin.pomidorki.presentation.MainActivity
 import com.enriqueajin.pomidorki.presentation.home.TimerScreenContract.Effect
 import com.enriqueajin.pomidorki.presentation.home.TimerScreenContract.State
-import com.enriqueajin.pomidorki.presentation.home.components.CountdownView
-import com.enriqueajin.pomidorki.presentation.home.components.PomodoroCountdown
 import com.enriqueajin.pomidorki.presentation.home.components.TimerButton
 import com.enriqueajin.pomidorki.presentation.home.components.TimerPicker
 import com.enriqueajin.pomidorki.presentation.permission_handling.PermissionDialog
@@ -103,7 +103,6 @@ import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_RESET
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_START
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_TIMER_TYPE
 import com.enriqueajin.pomidorki.utils.Constants.pomodoroTabItems
-import com.enriqueajin.pomidorki.utils.TimeFormatter.formatTime
 
 @Composable
 fun TimerScreenRoot(
@@ -317,24 +316,26 @@ fun TimerScreen(
                     )
                     Box(
                         modifier = Modifier.padding(top = 42.dp),
-                        contentAlignment = Alignment.Center
+                        contentAlignment = Alignment.Center,
                     ) {
-                        PomodoroCountdown(
+                        Box(
                             modifier = Modifier
-                                .size(197.dp)
-                                .background(pinkPrimary), // Consider if this background is still needed or correct
-                            initialValue = 0,
-                            timeLeftMillis = uiState.timeLeft,
-                            arcColor = timerArcColor,
-                            timeElapsedArcColor = timeElapsedArcColor,
-                            circleRadius = 340f,
-                            backgroundColor = MaterialTheme.colorScheme.background,
-                            onPositionChange = {}
-                        )
-                        CountdownView(
-                            formattedText = uiState.timeLeft.formatTime(),
-                            textColor = timerTextColor,
-                        )
+                                .background(
+                                    color = MaterialTheme.colorScheme.background,
+                                    shape = RoundedCornerShape(999.dp),
+                                )
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            TimerProgressIndicator(
+                                modifier = Modifier.size(TimerProgressIndicatorDefaults.Size),
+                                progress = uiState.timerProgress,
+                                timerText = uiState.timerText,
+                                indicatorColor = timerArcColor,
+                                trackColor = timeElapsedArcColor,
+                                textColor = timerTextColor,
+                            )
+                        }
                     }
                     Spacer(modifier = Modifier.height(35.dp))
                 }
