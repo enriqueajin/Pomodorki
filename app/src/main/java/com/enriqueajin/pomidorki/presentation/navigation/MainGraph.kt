@@ -15,7 +15,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.enriqueajin.pomidorki.presentation.home.TimerScreenRoot
-import com.enriqueajin.pomidorki.presentation.pomodoro_settings.PomodoroSettingsScreenRoot
+import com.enriqueajin.pomidorki.presentation.pomodorosettings.PomodoroSettingsScreenRoot
 import com.enriqueajin.pomidorki.presentation.stats.StatsScreen
 import com.enriqueajin.pomidorki.presentation.tasks.TasksScreenRoot
 import com.enriqueajin.pomidorki.utils.Constants
@@ -24,26 +24,27 @@ import com.enriqueajin.pomidorki.utils.Constants.screensWithTopBar
 
 @Composable
 fun MainGraph() {
-
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     var selectedItem by remember { mutableIntStateOf(0) }
     val currentRoute = navBackStackEntry?.destination?.route
 
-    selectedItem = when (currentRoute) {
-        Route.Timer.route -> 0
-        Route.Tasks.route -> 1
-        Route.Stats.route -> 2
-        else -> 0
-    }
+    selectedItem =
+        when (currentRoute) {
+            Route.Timer.route -> 0
+            Route.Tasks.route -> 1
+            Route.Stats.route -> 2
+            else -> 0
+        }
 
-    val isBottomBarVisible = remember(navBackStackEntry) {
-        navBackStackEntry?.destination?.route in screensWithBottomBar
-    }
+    val isBottomBarVisible =
+        remember(navBackStackEntry) {
+            navBackStackEntry?.destination?.route in screensWithBottomBar
+        }
 
     Scaffold(
         topBar = {
-            if(currentRoute in screensWithTopBar) {
+            if (currentRoute in screensWithTopBar) {
                 EmptyTopBar()
             }
         },
@@ -54,15 +55,15 @@ fun MainGraph() {
                     selectedItem = selectedItem,
                     onItemClick = { route ->
                         navigateToTab(navController, route)
-                    }
+                    },
                 )
             }
-        }
+        },
     ) { innerPadding ->
         NavHost(
             navController = navController,
             startDestination = Route.Timer.route,
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier.padding(innerPadding),
         ) {
             composable(route = Route.Timer.route) {
                 TimerScreenRoot {
@@ -84,14 +85,20 @@ fun MainGraph() {
     }
 }
 
-private fun navigateToDetail(navController: NavController, routeBuilder: () -> String) {
+private fun navigateToDetail(
+    navController: NavController,
+    routeBuilder: () -> String,
+) {
     navController.navigate(routeBuilder()) {
         launchSingleTop = true
         restoreState = true
     }
 }
 
-private fun navigateToTab(navController: NavController, route: String) {
+private fun navigateToTab(
+    navController: NavController,
+    route: String,
+) {
     navController.navigate(route) {
         navController.graph.startDestinationRoute?.let { screenRoute ->
             popUpTo(screenRoute) {

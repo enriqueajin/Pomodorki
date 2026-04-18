@@ -12,3 +12,6 @@ build/
 .cxx
 local.properties
 google-services.json
+
+# Local Gradle cache used by this repo (do not commit)
+.gradle-user-home/

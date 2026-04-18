@@ -1,7 +1,9 @@
 package com.enriqueajin.pomidorki.domain.model
 
-enum class Status(val label: String) {
+enum class Status(
+    val label: String,
+) {
     TODO("To-do"),
     IN_PROGRESS("In progress"),
-    DONE("Done")
+    DONE("Done"),
 }

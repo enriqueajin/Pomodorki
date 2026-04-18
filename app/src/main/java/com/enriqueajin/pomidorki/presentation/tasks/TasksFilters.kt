@@ -9,12 +9,15 @@ data class TasksFilters(
 )
 
 sealed class Sorting {
-    data object Title: Sorting()
-    data object Category: Sorting()
-    data object Priority: Sorting()
+    data object Title : Sorting()
+
+    data object Category : Sorting()
+
+    data object Priority : Sorting()
 }
 
 sealed class Grouping {
-    data object Category: Grouping()
-    data object Priority: Grouping()
+    data object Category : Grouping()
+
+    data object Priority : Grouping()
 }

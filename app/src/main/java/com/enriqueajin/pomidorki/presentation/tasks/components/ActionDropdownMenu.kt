@@ -27,22 +27,22 @@ fun ActionDropdownMenu(
         Box(modifier = modifier) {
             IconButton(
                 modifier = modifier,
-                onClick = { onExpandedChange(!expanded) }
+                onClick = { onExpandedChange(!expanded) },
             ) {
                 Icon(
                     modifier = modifier,
                     imageVector = icon,
-                    contentDescription = "Three dot dropdown menu"
+                    contentDescription = "Three dot dropdown menu",
                 )
             }
             DropdownMenu(
                 expanded = expanded,
-                onDismissRequest = { onExpandedChange(false) }
+                onDismissRequest = { onExpandedChange(false) },
             ) {
                 dropdownItemList.forEach { item ->
                     DropdownMenuItem(
                         text = { Text(text = item) },
-                        onClick = { onDropdownItemClick(item) }
+                        onClick = { onDropdownItemClick(item) },
                     )
                 }
             }
@@ -59,6 +59,6 @@ private fun ActionDropdownMenuPreview(modifier: Modifier = Modifier) {
         icon = Icons.Default.MoreVert,
         onExpandedChange = {},
         dropdownItemList = itemList,
-        onDropdownItemClick = {}
+        onDropdownItemClick = {},
     )
 }

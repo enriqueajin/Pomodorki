@@ -1,11 +1,16 @@
 package com.enriqueajin.pomidorki.data.services
 
 enum class Action {
-    START, STOP, CANCEL, PAUSE, NONE, RESUME
+    START,
+    STOP,
+    CANCEL,
+    PAUSE,
+    NONE,
+    RESUME,
 }
 
-fun String.toAction(): Action {
-    return when(this) {
+fun String.toAction(): Action =
+    when (this) {
         "START" -> Action.START
         "STOP" -> Action.STOP
         "CANCEL" -> Action.CANCEL
@@ -13,4 +18,3 @@ fun String.toAction(): Action {
         "NONE" -> Action.NONE
         else -> Action.NONE
     }
-}

@@ -15,19 +15,20 @@ import dagger.hilt.android.scopes.ServiceScoped
 @Module
 @InstallIn(ServiceComponent::class)
 class NotificationModule {
+    @ServiceScoped
+    @Provides
+    fun provideNotificationBuilder(
+        @ApplicationContext context: Context,
+    ): NotificationCompat.Builder =
+        NotificationCompat
+            .Builder(context, NOTIFICATION_TICK_CHANNEL_ID)
+            .setContentTitle("Remaining time")
+            .setContentText("25:00")
+            .setSmallIcon(R.drawable.filled_timer)
 
     @ServiceScoped
     @Provides
-    fun provideNotificationBuilder(@ApplicationContext context: Context): NotificationCompat.Builder {
-        return NotificationCompat.Builder(context, NOTIFICATION_TICK_CHANNEL_ID)
-                .setContentTitle("Remaining time")
-                .setContentText("25:00")
-                .setSmallIcon(R.drawable.filled_timer)
-
-    }
-
-    @ServiceScoped
-    @Provides
-    fun providesNotificationManager(@ApplicationContext context: Context)
-        = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    fun providesNotificationManager(
+        @ApplicationContext context: Context,
+    ) = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 }

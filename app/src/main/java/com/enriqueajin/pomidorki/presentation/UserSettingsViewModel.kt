@@ -14,51 +14,54 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class UserSettingsViewModel @Inject constructor(
-    private val userSettingsRepository: UserSettingsRepository
-) : ViewModel() {
+class UserSettingsViewModel
+    @Inject
+    constructor(
+        private val userSettingsRepository: UserSettingsRepository,
+    ) : ViewModel() {
+        val userSettingsState =
+            userSettingsRepository.userSettingsFlow
+                .map { preferences ->
+                    val pomodoroDuration = userSettingsRepository.getSetting(POMODORO_DURATION)
+                    val shortBreakDuration = userSettingsRepository.getSetting(SHORT_BREAK_DURATION)
+                    val longBreakDuration = userSettingsRepository.getSetting(LONG_BREAK_DURATION)
+                    UserSettingsState(
+                        pomodoroDuration = pomodoroDuration.toLong(),
+                        shortBreakDuration = shortBreakDuration.toLong(),
+                        longBreakDuration = longBreakDuration.toLong(),
+                    )
+                }.stateIn(
+                    scope = viewModelScope,
+                    started = SharingStarted.WhileSubscribed(5000),
+                    initialValue = UserSettingsState(),
+                )
 
-    val userSettingsState = userSettingsRepository.userSettingsFlow.map { preferences ->
-        val pomodoroDuration = userSettingsRepository.getSetting(POMODORO_DURATION)
-        val shortBreakDuration = userSettingsRepository.getSetting(SHORT_BREAK_DURATION)
-        val longBreakDuration = userSettingsRepository.getSetting(LONG_BREAK_DURATION)
-        UserSettingsState(
-            pomodoroDuration = pomodoroDuration.toLong(),
-            shortBreakDuration = shortBreakDuration.toLong(),
-            longBreakDuration = longBreakDuration.toLong(),
-        )
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = UserSettingsState()
-    )
-
-    fun onUserSettingsEvent(event: UserSettingsEvent) {
-        when(event) {
-            is UserSettingsEvent.UpdatePomodoroDuration -> {
-                viewModelScope.launch {
-                    userSettingsRepository.saveString(
-                        key = POMODORO_DURATION,
-                        value = event.minutes.toString()
-                    )
+        fun onUserSettingsEvent(event: UserSettingsEvent) {
+            when (event) {
+                is UserSettingsEvent.UpdatePomodoroDuration -> {
+                    viewModelScope.launch {
+                        userSettingsRepository.saveString(
+                            key = POMODORO_DURATION,
+                            value = event.minutes.toString(),
+                        )
+                    }
                 }
-            }
-            is UserSettingsEvent.UpdateShortBreakDuration -> {
-                viewModelScope.launch {
-                    userSettingsRepository.saveString(
-                        key = SHORT_BREAK_DURATION,
-                        value = event.minutes.toString()
-                    )
+                is UserSettingsEvent.UpdateShortBreakDuration -> {
+                    viewModelScope.launch {
+                        userSettingsRepository.saveString(
+                            key = SHORT_BREAK_DURATION,
+                            value = event.minutes.toString(),
+                        )
+                    }
                 }
-            }
-            is UserSettingsEvent.UpdateLongBreakDuration -> {
-                viewModelScope.launch {
-                    userSettingsRepository.saveString(
-                        key = LONG_BREAK_DURATION,
-                        value = event.minutes.toString()
-                    )
+                is UserSettingsEvent.UpdateLongBreakDuration -> {
+                    viewModelScope.launch {
+                        userSettingsRepository.saveString(
+                            key = LONG_BREAK_DURATION,
+                            value = event.minutes.toString(),
+                        )
+                    }
                 }
             }
         }
     }
-}

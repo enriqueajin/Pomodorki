@@ -42,35 +42,42 @@ fun TaskItem(
     onTaskClick: () -> Unit,
 ) {
     Card(
-        modifier = modifier
-            .padding(bottom = 10.dp)
-            .fillMaxWidth()
-            .height(75.dp)
-            .clickable { onTaskClick() },
+        modifier =
+            modifier
+                .padding(bottom = 10.dp)
+                .fillMaxWidth()
+                .height(75.dp)
+                .clickable { onTaskClick() },
         shape = RoundedCornerShape(14),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 4.dp
-        )
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface,
+            ),
+        elevation =
+            CardDefaults.cardElevation(
+                defaultElevation = 4.dp,
+            ),
     ) {
         Row(
-            modifier = modifier
-                .fillMaxSize()
-                .padding(end = 8.dp),
+            modifier =
+                modifier
+                    .fillMaxSize()
+                    .padding(end = 8.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Row(
                 modifier = Modifier.weight(1f),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Box(modifier = modifier
-                    .width(20.dp)
-                    .fillMaxHeight()
-                    .clip(RoundedCornerShape(topStart = 10.dp, bottomStart = 10.dp))
-                    .background(Color(task.priority.hexColor)))
+                Box(
+                    modifier =
+                        modifier
+                            .width(20.dp)
+                            .fillMaxHeight()
+                            .clip(RoundedCornerShape(topStart = 10.dp, bottomStart = 10.dp))
+                            .background(Color(task.priority.hexColor)),
+                )
                 Spacer(modifier = Modifier.width(8.dp))
                 Column {
                     Text(
@@ -78,49 +85,50 @@ fun TaskItem(
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp
+                        fontSize = 16.sp,
                     )
                     Text(
                         text = "Pomodoros 3/5",
-                        color = Color.DarkGray
+                        color = Color.DarkGray,
                     )
                 }
             }
-                Column(
-                    horizontalAlignment = Alignment.End
-                ) {
-                    Box(
-                        modifier = modifier
+            Column(
+                horizontalAlignment = Alignment.End,
+            ) {
+                Box(
+                    modifier =
+                        modifier
                             .height(20.dp)
                             .clip(RoundedCornerShape(50))
-                            .background(task.category.color)
-                    ) {
-                        Text(
-                            modifier = modifier
+                            .background(task.category.color),
+                ) {
+                    Text(
+                        modifier =
+                            modifier
                                 .align(Alignment.Center)
                                 .padding(horizontal = 5.dp),
-                            text = task.category.name,
-                            color = MaterialTheme.colorScheme.inverseOnSurface
-                        )
-
-                    }
-                    Spacer(modifier = Modifier.height(5.dp))
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            modifier = Modifier.size(18.dp),
-                            imageVector = Icons.Default.DateRange,
-                            tint = Color.DarkGray,
-                            contentDescription = "Calendar icon"
-                        )
-                        Spacer(modifier = Modifier.width(2.dp))
-                        Text(
-                            modifier = modifier,
-                            text = task.dueDate,
-                        )
-                    }
+                        text = task.category.name,
+                        color = MaterialTheme.colorScheme.inverseOnSurface,
+                    )
                 }
+                Spacer(modifier = Modifier.height(5.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        modifier = Modifier.size(18.dp),
+                        imageVector = Icons.Default.DateRange,
+                        tint = Color.DarkGray,
+                        contentDescription = "Calendar icon",
+                    )
+                    Spacer(modifier = Modifier.width(2.dp))
+                    Text(
+                        modifier = modifier,
+                        text = task.dueDate,
+                    )
+                }
+            }
         }
     }
 }
@@ -130,6 +138,6 @@ fun TaskItem(
 fun TaskItemPreview(modifier: Modifier = Modifier) {
     TaskItem(
         task = getTasks().first(),
-        onTaskClick = {}
+        onTaskClick = {},
     )
 }

@@ -34,33 +34,38 @@ fun TimerButton(
     onClick: () -> Unit,
 ) {
     Button(
-        modifier = modifier
-            .width(160.dp)
-            .height(45.dp),
+        modifier =
+            modifier
+                .width(160.dp)
+                .height(45.dp),
         onClick = onClick,
-        colors = ButtonDefaults.buttonColors(
-            containerColor = containerColor,
-            contentColor = Color.White,
-        )
+        colors =
+            ButtonDefaults.buttonColors(
+                containerColor = containerColor,
+                contentColor = Color.White,
+            ),
     ) {
         Row(
-            modifier = modifier
-                .fillMaxWidth(),
+            modifier =
+                modifier
+                    .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
-                modifier = modifier
-                    .size(35.dp),
+                modifier =
+                    modifier
+                        .size(35.dp),
                 imageVector = icon,
-                contentDescription = null
+                contentDescription = null,
             )
             Text(
                 text = text,
                 fontSize = 18.sp,
-                fontFamily = FontFamily(
-                    Font(R.font.montserrat_semibold)
-                )
+                fontFamily =
+                    FontFamily(
+                        Font(R.font.montserrat_semibold),
+                    ),
             )
         }
     }

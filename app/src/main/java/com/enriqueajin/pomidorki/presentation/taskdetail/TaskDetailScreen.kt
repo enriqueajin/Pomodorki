@@ -1,4 +1,4 @@
-package com.enriqueajin.pomidorki.presentation.task_detail
+package com.enriqueajin.pomidorki.presentation.taskdetail
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -11,7 +11,6 @@ private fun TaskDetailScreenRoot(modifier: Modifier = Modifier) {
 
 @Composable
 fun TaskDetailScreen(modifier: Modifier = Modifier) {
-
 }
 
 @Preview(showBackground = true, showSystemUi = true)

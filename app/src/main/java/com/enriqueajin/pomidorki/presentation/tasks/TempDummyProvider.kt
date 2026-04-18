@@ -16,8 +16,8 @@ fun getRandomDarkColor(): Color {
 
 val myColor = Color.Green
 
-fun getTasks(): List<Task> {
-    return listOf(
+fun getTasks(): List<Task> =
+    listOf(
         Task(
             title = "Going to the gym",
             description = "Make 50 squats, 10 reps each",
@@ -25,7 +25,7 @@ fun getTasks(): List<Task> {
             status = Status.IN_PROGRESS,
             priority = Priority.HIGH,
             category = Category("Gym", myColor),
-            dueDate = "01/05/2025"
+            dueDate = "01/05/2025",
         ),
         Task(
             title = "Finish the report",
@@ -34,7 +34,7 @@ fun getTasks(): List<Task> {
             status = Status.TODO,
             priority = Priority.VERY_HIGH,
             category = Category("Work", myColor),
-            dueDate = "30/04/2025"
+            dueDate = "30/04/2025",
         ),
         Task(
             title = "Study Kotlin",
@@ -43,7 +43,7 @@ fun getTasks(): List<Task> {
             status = Status.IN_PROGRESS,
             priority = Priority.HIGH,
             category = Category("Education", myColor),
-            dueDate = "10/05/2025"
+            dueDate = "10/05/2025",
         ),
         Task(
             title = "Buy groceries",
@@ -52,7 +52,7 @@ fun getTasks(): List<Task> {
             status = Status.TODO,
             priority = Priority.LOW,
             category = Category("Personal", myColor),
-            dueDate = "28/04/2025"
+            dueDate = "28/04/2025",
         ),
         Task(
             title = "Finish reading book",
@@ -61,7 +61,7 @@ fun getTasks(): List<Task> {
             status = Status.IN_PROGRESS,
             priority = Priority.MEDIUM,
             category = Category("Reading", myColor),
-            dueDate = "05/05/2025"
+            dueDate = "05/05/2025",
         ),
         Task(
             title = "Prepare for meeting",
@@ -70,7 +70,7 @@ fun getTasks(): List<Task> {
             status = Status.TODO,
             priority = Priority.HIGH,
             category = Category("Work", myColor),
-            dueDate = "03/05/2025"
+            dueDate = "03/05/2025",
         ),
         Task(
             title = "Clean the house",
@@ -79,7 +79,7 @@ fun getTasks(): List<Task> {
             status = Status.TODO,
             priority = Priority.LOW,
             category = Category("Personal", myColor),
-            dueDate = "27/04/2025"
+            dueDate = "27/04/2025",
         ),
         Task(
             title = "Complete workout challenge",
@@ -88,7 +88,7 @@ fun getTasks(): List<Task> {
             status = Status.IN_PROGRESS,
             priority = Priority.MEDIUM,
             category = Category("Gym", myColor),
-            dueDate = "02/05/2025"
+            dueDate = "02/05/2025",
         ),
         Task(
             title = "Fix bug in app",
@@ -97,7 +97,7 @@ fun getTasks(): List<Task> {
             status = Status.IN_PROGRESS,
             priority = Priority.HIGH,
             category = Category("Development", myColor),
-            dueDate = "01/05/2025"
+            dueDate = "01/05/2025",
         ),
         Task(
             title = "Take out the trash",
@@ -106,7 +106,7 @@ fun getTasks(): List<Task> {
             status = Status.TODO,
             priority = Priority.LOW,
             category = Category("Personal", myColor),
-            dueDate = "26/04/2025"
+            dueDate = "26/04/2025",
         ),
         Task(
             title = "Learn new song on guitar",
@@ -115,7 +115,7 @@ fun getTasks(): List<Task> {
             status = Status.TODO,
             priority = Priority.MEDIUM,
             category = Category("Hobby", myColor),
-            dueDate = "15/05/2025"
+            dueDate = "15/05/2025",
         ),
         Task(
             title = "Attend seminar",
@@ -124,7 +124,7 @@ fun getTasks(): List<Task> {
             status = Status.TODO,
             priority = Priority.MEDIUM,
             category = Category("Education", myColor),
-            dueDate = "20/05/2025"
+            dueDate = "20/05/2025",
         ),
         Task(
             title = "Plan weekend trip",
@@ -133,7 +133,7 @@ fun getTasks(): List<Task> {
             status = Status.DONE,
             priority = Priority.MEDIUM,
             category = Category("Travel", myColor),
-            dueDate = "05/05/2025"
+            dueDate = "05/05/2025",
         ),
         Task(
             title = "Meditation session",
@@ -142,7 +142,7 @@ fun getTasks(): List<Task> {
             status = Status.TODO,
             priority = Priority.LOW,
             category = Category("Wellness", myColor),
-            dueDate = "28/04/2025"
+            dueDate = "28/04/2025",
         ),
         Task(
             title = "Update LinkedIn profile",
@@ -151,7 +151,7 @@ fun getTasks(): List<Task> {
             status = Status.IN_PROGRESS,
             priority = Priority.HIGH,
             category = Category("Career", myColor),
-            dueDate = "02/05/2025"
+            dueDate = "02/05/2025",
         ),
         Task(
             title = "Organize workspace",
@@ -160,7 +160,7 @@ fun getTasks(): List<Task> {
             status = Status.DONE,
             priority = Priority.LOW,
             category = Category("Personal", myColor),
-            dueDate = "29/04/2025"
+            dueDate = "29/04/2025",
         ),
         Task(
             title = "Practice public speaking",
@@ -169,7 +169,7 @@ fun getTasks(): List<Task> {
             status = Status.IN_PROGRESS,
             priority = Priority.HIGH,
             category = Category("Career", myColor),
-            dueDate = "04/05/2025"
+            dueDate = "04/05/2025",
         ),
         Task(
             title = "Update app documentation",
@@ -178,7 +178,7 @@ fun getTasks(): List<Task> {
             status = Status.TODO,
             priority = Priority.HIGH,
             category = Category("Development", myColor),
-            dueDate = "07/05/2025"
+            dueDate = "07/05/2025",
         ),
         Task(
             title = "Visit parents",
@@ -187,7 +187,7 @@ fun getTasks(): List<Task> {
             status = Status.DONE,
             priority = Priority.MEDIUM,
             category = Category("Family", myColor),
-            dueDate = "03/05/2025"
+            dueDate = "03/05/2025",
         ),
         Task(
             title = "Watch KotlinConf recordings",
@@ -196,7 +196,7 @@ fun getTasks(): List<Task> {
             status = Status.TODO,
             priority = Priority.MEDIUM,
             category = Category("Education", myColor),
-            dueDate = "18/05/2025"
+            dueDate = "18/05/2025",
         ),
         Task(
             title = "Run 5k",
@@ -205,7 +205,7 @@ fun getTasks(): List<Task> {
             status = Status.TODO,
             priority = Priority.HIGH,
             category = Category("Fitness", myColor),
-            dueDate = "02/05/2025"
+            dueDate = "02/05/2025",
         ),
         Task(
             title = "Design new logo",
@@ -214,7 +214,6 @@ fun getTasks(): List<Task> {
             status = Status.IN_PROGRESS,
             priority = Priority.VERY_HIGH,
             category = Category("Design", myColor),
-            dueDate = "08/05/2025"
-        )
+            dueDate = "08/05/2025",
+        ),
     )
-}

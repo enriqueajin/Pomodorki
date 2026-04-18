@@ -1,4 +1,4 @@
-package com.enriqueajin.pomidorki.presentation.pomodoro_settings
+package com.enriqueajin.pomidorki.presentation.pomodorosettings
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -60,56 +60,59 @@ private const val SHORT_BREAK = "Short Break"
 private const val LONG_BREAK = "Long Break"
 
 @Composable
-fun PomodoroSettingsScreenRoot(
-    userSettingsViewModel: UserSettingsViewModel = hiltViewModel()
-) {
+fun PomodoroSettingsScreenRoot(userSettingsViewModel: UserSettingsViewModel = hiltViewModel()) {
     val userSettingsState by userSettingsViewModel.userSettingsState.collectAsStateWithLifecycle()
 
     PomodoroSettingsScreen(
         userSettingsState = userSettingsState,
-        onUserSettingsEvent = userSettingsViewModel::onUserSettingsEvent
+        onUserSettingsEvent = userSettingsViewModel::onUserSettingsEvent,
     )
 }
 
 @Composable
 fun PomodoroSettingsScreen(
     userSettingsState: UserSettingsState,
-    onUserSettingsEvent: (UserSettingsEvent) -> Unit
+    onUserSettingsEvent: (UserSettingsEvent) -> Unit,
 ) {
     var isSettingDialogOpen by remember { mutableStateOf(false) }
     var settingDialogTime by remember { mutableIntStateOf(0) }
     var currentSettingName by remember { mutableStateOf(POMODORO) }
-    val settingsList = mapOf(
-        POMODORO to userSettingsState.pomodoroDuration,
-        SHORT_BREAK to userSettingsState.shortBreakDuration,
-        LONG_BREAK to userSettingsState.longBreakDuration
-    )
+    val settingsList =
+        mapOf(
+            POMODORO to userSettingsState.pomodoroDuration,
+            SHORT_BREAK to userSettingsState.shortBreakDuration,
+            LONG_BREAK to userSettingsState.longBreakDuration,
+        )
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(shortBreakPickerIndicator),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(shortBreakPickerIndicator),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            modifier = Modifier
+            modifier =
+                Modifier
                     .padding(top = 20.dp),
             text = stringResource(R.string.pomodoro_settings_title),
             color = Color.White,
             fontSize = 20.sp,
-            style = TextStyle(
-                fontSize = 16.sp,
-                fontFamily = FontFamily(
-                    Font(
-                        resId = R.font.montserrat_medium
-                    )
-                )
-            ),
+            style =
+                TextStyle(
+                    fontSize = 16.sp,
+                    fontFamily =
+                        FontFamily(
+                            Font(
+                                resId = R.font.montserrat_medium,
+                            ),
+                        ),
+                ),
         )
         Spacer(modifier = Modifier.height(15.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
+            horizontalArrangement = Arrangement.SpaceEvenly,
         ) {
             settingsList.map {
                 SettingTime(
@@ -119,11 +122,11 @@ fun PomodoroSettingsScreen(
                         currentSettingName = title
                         settingDialogTime = time
                         isSettingDialogOpen = true
-                    }
+                    },
                 )
             }
         }
-        if(isSettingDialogOpen) {
+        if (isSettingDialogOpen) {
             EditTimeDialog(
                 onDismissRequest = { isSettingDialogOpen = false },
                 currentSettingName = currentSettingName,
@@ -132,13 +135,13 @@ fun PomodoroSettingsScreen(
                     settingDialogTime = newTime
                 },
                 onConfirmUpdateSetting = {
-                    when(currentSettingName) {
+                    when (currentSettingName) {
                         POMODORO -> onUserSettingsEvent(UserSettingsEvent.UpdatePomodoroDuration(settingDialogTime.toLong()))
                         SHORT_BREAK -> onUserSettingsEvent(UserSettingsEvent.UpdateShortBreakDuration(settingDialogTime.toLong()))
                         LONG_BREAK -> onUserSettingsEvent(UserSettingsEvent.UpdateLongBreakDuration(settingDialogTime.toLong()))
                     }
                     isSettingDialogOpen = false
-                }
+                },
             )
         }
     }
@@ -159,92 +162,98 @@ fun EditTimeDialog(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(MaterialTheme.colorScheme.primaryContainer)
+                colors = CardDefaults.cardColors(MaterialTheme.colorScheme.primaryContainer),
             ) {
                 Column(
-                    modifier = Modifier
-                        .padding(
-                            horizontal = 16.dp,
-                            vertical = 20.dp
-                        ),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    modifier =
+                        Modifier
+                            .padding(
+                                horizontal = 16.dp,
+                                vertical = 20.dp,
+                            ),
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Text(
                         text = currentSettingName,
-                        fontSize = 22.sp
+                        fontSize = 22.sp,
                     )
                     Spacer(modifier = Modifier.height(20.dp))
                     Row(
-                        modifier = modifier
-                            .fillMaxWidth(),
+                        modifier =
+                            modifier
+                                .fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly,
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         IconButton(
-                            modifier = modifier
-                                .clip(CircleShape)
-                                .background(shortBreakBackground),
+                            modifier =
+                                modifier
+                                    .clip(CircleShape)
+                                    .background(shortBreakBackground),
                             onClick = {
                                 onTimeSettingChange(settingDialogTime - 1)
-                            }
+                            },
                         ) {
                             Icon(
                                 modifier = Modifier.size(24.dp),
                                 painter = painterResource(R.drawable.minus),
-                                contentDescription = null
+                                contentDescription = null,
                             )
                         }
                         Text(
                             text = "$settingDialogTime",
-                            fontSize = 32.sp
+                            fontSize = 32.sp,
                         )
                         IconButton(
-                            modifier = modifier
-                                .clip(CircleShape)
-                                .background(shortBreakBackground),
+                            modifier =
+                                modifier
+                                    .clip(CircleShape)
+                                    .background(shortBreakBackground),
                             onClick = {
                                 onTimeSettingChange(settingDialogTime + 1)
-                            }
+                            },
                         ) {
                             Icon(
                                 modifier = Modifier.size(24.dp),
                                 imageVector = Icons.Filled.Add,
-                                contentDescription = null
+                                contentDescription = null,
                             )
                         }
                     }
                     Spacer(modifier = Modifier.height(25.dp))
                     Row {
                         TextButton(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(CircleShape)
-                                .background(darkPink),
-                            onClick = onDismissRequest
+                            modifier =
+                                Modifier
+                                    .weight(1f)
+                                    .clip(CircleShape)
+                                    .background(darkPink),
+                            onClick = onDismissRequest,
                         ) {
                             Text(
                                 text = stringResource(R.string.cancel),
-                                color = Color.White
+                                color = Color.White,
                             )
                         }
                         Spacer(modifier = Modifier.width(15.dp))
                         TextButton(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(CircleShape)
-                                .background(greenPomodoro),
+                            modifier =
+                                Modifier
+                                    .weight(1f)
+                                    .clip(CircleShape)
+                                    .background(greenPomodoro),
                             shape = CircleShape,
-                            onClick = onConfirmUpdateSetting
+                            onClick = onConfirmUpdateSetting,
                         ) {
                             Text(
                                 text = stringResource(R.string.accept),
-                                color = Color.White
+                                color = Color.White,
                             )
                         }
                     }
                 }
             }
-        }
+        },
     )
 }
 
@@ -252,28 +261,29 @@ fun EditTimeDialog(
 fun SettingTime(
     time: Int,
     title: String,
-    onSettingClicked: (Int, String) -> Unit
+    onSettingClicked: (Int, String) -> Unit,
 ) {
     Box(
-        modifier = Modifier
-            .size(95.dp)
-            .clip(RoundedCornerShape(5.dp))
-            .background(shortBreakArcBar)
-            .clickable { onSettingClicked(time, title) }
+        modifier =
+            Modifier
+                .size(95.dp)
+                .clip(RoundedCornerShape(5.dp))
+                .background(shortBreakArcBar)
+                .clickable { onSettingClicked(time, title) },
     ) {
         Column(
             modifier = Modifier.align(Alignment.Center),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
                 text = "$time",
                 fontSize = 34.sp,
-                color = Color.White
+                color = Color.White,
             )
             Spacer(modifier = Modifier.height(5.dp))
             Text(
                 text = title,
-                color = Color.White
+                color = Color.White,
             )
         }
     }
@@ -284,6 +294,6 @@ fun SettingTime(
 fun PomodoroSettingsPreview() {
     PomodoroSettingsScreen(
         userSettingsState = UserSettingsState(),
-        onUserSettingsEvent = {}
+        onUserSettingsEvent = {},
     )
 }

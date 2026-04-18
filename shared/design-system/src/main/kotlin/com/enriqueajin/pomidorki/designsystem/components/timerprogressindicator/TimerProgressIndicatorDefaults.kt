@@ -12,7 +12,7 @@ object TimerProgressIndicatorDefaults {
     val Size: Dp = TimerProgressIndicatorTokens.IndicatorSize
     val StrokeWidth: Dp = TimerProgressIndicatorTokens.StrokeWidth
     val ProgressAnimationSpec: AnimationSpec<Float> =
-        tween(durationMillis = TimerProgressIndicatorTokens.AnimationDurationMillis)
+        tween(durationMillis = TimerProgressIndicatorTokens.ANIMATION_DURATION_MILLIS)
 
     @Composable
     fun indicatorColor(): Color = TimerProgressIndicatorTokens.indicatorColor()
@@ -21,7 +21,7 @@ object TimerProgressIndicatorDefaults {
     fun containerColor(): Color = TimerProgressIndicatorTokens.containerColor()
 
     @Composable
-    fun  trackColor(): Color = TimerProgressIndicatorTokens.trackColor()
+    fun trackColor(): Color = TimerProgressIndicatorTokens.trackColor()
 
     @Composable
     fun textColor(): Color = TimerProgressIndicatorTokens.textColor()

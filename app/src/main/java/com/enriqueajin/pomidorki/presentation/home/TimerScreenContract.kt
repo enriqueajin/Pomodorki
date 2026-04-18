@@ -3,7 +3,6 @@ package com.enriqueajin.pomidorki.presentation.home
 import com.enriqueajin.pomidorki.data.services.CountdownState
 
 sealed interface TimerScreenContract {
-
     data class State(
         val currentState: CountdownState = CountdownState.Idle,
         val timeLeft: Long = 0L,
@@ -14,6 +13,8 @@ sealed interface TimerScreenContract {
     )
 
     sealed class Effect {
-        data class UpdateSelectedTimer(val selected: Int): Effect()
+        data class UpdateSelectedTimer(
+            val selected: Int,
+        ) : Effect()
     }
 }

@@ -46,7 +46,6 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class CountdownService : Service() {
-
     @Inject
     lateinit var notificationBuilder: NotificationCompat.Builder
 
@@ -74,7 +73,7 @@ class CountdownService : Service() {
         }
         coroutineScope.launch {
             countdownTimer.timeLeft.collect { timeLeft ->
-                if(timeLeft > 0L) {
+                if (timeLeft > 0L) {
                     updateServiceData(timeLeft = timeLeft)
                     updateNotification(timeLeft)
                 } else if (_serviceData.value.currentState == CountdownState.Started) {
@@ -90,11 +89,14 @@ class CountdownService : Service() {
 
     override fun onBind(intent: Intent?) = binder
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-
+    override fun onStartCommand(
+        intent: Intent?,
+        flags: Int,
+        startId: Int,
+    ): Int {
         val action =
             intent?.action ?: // when triggered by the UI
-            intent?.getStringExtra(COUNTDOWN_STATE) // When trigger by the notification
+                intent?.getStringExtra(COUNTDOWN_STATE) // When trigger by the notification
 
         if (intent?.hasExtra(ACTION_TIMER_TYPE) == true) {
             val timerType = intent.getIntExtra(ACTION_TIMER_TYPE, _serviceData.value.selectedTimer)
@@ -105,7 +107,7 @@ class CountdownService : Service() {
         println("Intent: ${intent?.action}")
         println("Intent: ${intent?.getStringExtra(COUNTDOWN_STATE)}")
 
-        when(action) {
+        when (action) {
             CountdownState.Started.name, ACTION_SERVICE_START -> {
                 startForegroundService()
                 setStartedActions()
@@ -134,7 +136,7 @@ class CountdownService : Service() {
         createNotificationChannels()
         startForeground(
             NOTIFICATION_TICK_ID,
-            notificationBuilder.build()
+            notificationBuilder.build(),
         )
     }
 
@@ -149,36 +151,40 @@ class CountdownService : Service() {
                 currentState = currentState ?: it.currentState,
                 timeLeft = timeLeft ?: it.timeLeft,
                 initialMillis = initialMillis ?: it.initialMillis,
-                selectedTimer = selectedTimer ?: it.selectedTimer
+                selectedTimer = selectedTimer ?: it.selectedTimer,
             )
         }
     }
 
     private fun createNotificationChannels() {
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             // Notification channel used for timer onTick updates & action buttons
-            val timerTickChannel = NotificationChannel(
-                NOTIFICATION_TICK_CHANNEL_ID,
-                NOTIFICATION_TICK_CHANNEL_NAME,
-                NotificationManager.IMPORTANCE_LOW
-            )
+            val timerTickChannel =
+                NotificationChannel(
+                    NOTIFICATION_TICK_CHANNEL_ID,
+                    NOTIFICATION_TICK_CHANNEL_NAME,
+                    NotificationManager.IMPORTANCE_LOW,
+                )
 
             // Notification channel used when the timer is over
             val soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-            val audioAttributes = AudioAttributes.Builder()
-                .setUsage(AudioAttributes.USAGE_NOTIFICATION)
-                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                .build()
-            val timerEndsChannel = NotificationChannel(
-                NOTIFICATION_TIMER_RINGTONE_CHANNEL_ID,
-                NOTIFICATION_TIMER_RINGTONE_CHANNEL_NAME,
-                NotificationManager.IMPORTANCE_HIGH
-            ).apply {
-                setSound(soundUri, audioAttributes)
-                enableVibration(true)
-            }
+            val audioAttributes =
+                AudioAttributes
+                    .Builder()
+                    .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .build()
+            val timerEndsChannel =
+                NotificationChannel(
+                    NOTIFICATION_TIMER_RINGTONE_CHANNEL_ID,
+                    NOTIFICATION_TIMER_RINGTONE_CHANNEL_NAME,
+                    NotificationManager.IMPORTANCE_HIGH,
+                ).apply {
+                    setSound(soundUri, audioAttributes)
+                    enableVibration(true)
+                }
             notificationManager.createNotificationChannels(
-                listOf(timerTickChannel, timerEndsChannel)
+                listOf(timerTickChannel, timerEndsChannel),
             )
         }
     }
@@ -210,79 +216,85 @@ class CountdownService : Service() {
     }
 
     private fun setStartedActions() {
-        val actionList = listOf(
-            NotificationAction(
-                PAUSE_BUTTON_TITLE,
-                ServiceHelper.pausePendingIntent(this)
-            ),
-        )
+        val actionList =
+            listOf(
+                NotificationAction(
+                    PAUSE_BUTTON_TITLE,
+                    ServiceHelper.pausePendingIntent(this),
+                ),
+            )
         addNotificationActions(
             actionList = actionList,
             notificationBuilder = notificationBuilder,
-            notificationManager = notificationManager
+            notificationManager = notificationManager,
         )
     }
 
     private fun setPausedActions() {
-        val actionList = listOf(
-            NotificationAction(
-                RESUME_BUTTON_TITLE,
-                ServiceHelper.resumePendingIntent(this)
-            ),
-            NotificationAction(
-                RESET_BUTTON_TITLE,
-                ServiceHelper.resetPendingIntent(this)
-            ),
-            NotificationAction(
-                CLOSE_BUTTON_TITLE,
-                ServiceHelper.cancelPendingIntent(this)
-            ),
-        )
+        val actionList =
+            listOf(
+                NotificationAction(
+                    RESUME_BUTTON_TITLE,
+                    ServiceHelper.resumePendingIntent(this),
+                ),
+                NotificationAction(
+                    RESET_BUTTON_TITLE,
+                    ServiceHelper.resetPendingIntent(this),
+                ),
+                NotificationAction(
+                    CLOSE_BUTTON_TITLE,
+                    ServiceHelper.cancelPendingIntent(this),
+                ),
+            )
         addNotificationActions(
             actionList = actionList,
             notificationBuilder = notificationBuilder,
-            notificationManager = notificationManager
+            notificationManager = notificationManager,
         )
     }
 
     private fun setResetActions() {
-        val actionList = listOf(
-            NotificationAction(
-                START_BUTTON_TITLE,
-                ServiceHelper.startPendingIntent(this)
-            ),
-            NotificationAction(
-                CLOSE_BUTTON_TITLE,
-                ServiceHelper.cancelPendingIntent(this)
-            ),
-        )
+        val actionList =
+            listOf(
+                NotificationAction(
+                    START_BUTTON_TITLE,
+                    ServiceHelper.startPendingIntent(this),
+                ),
+                NotificationAction(
+                    CLOSE_BUTTON_TITLE,
+                    ServiceHelper.cancelPendingIntent(this),
+                ),
+            )
         addNotificationActions(
             actionList = actionList,
             notificationBuilder = notificationBuilder,
-            notificationManager = notificationManager
+            notificationManager = notificationManager,
         )
     }
 
     private fun updateNotification(timeLeft: Long) {
-        val notification = notificationBuilder
-            .setContentText(timeLeft.formatTime())
-            .setContentIntent(ServiceHelper.clickPendingIntent(this))
-            .build()
+        val notification =
+            notificationBuilder
+                .setContentText(timeLeft.formatTime())
+                .setContentIntent(ServiceHelper.clickPendingIntent(this))
+                .build()
 
         notificationManager.notify(NOTIFICATION_TICK_ID, notification)
     }
 
     private fun notifyTimerOver() {
-        val notification = NotificationCompat.Builder(this, NOTIFICATION_TIMER_RINGTONE_CHANNEL_ID)
-            .setContentTitle("Pomodoro ended")
-            .setContentText("Timer is over")
-            .setContentIntent(ServiceHelper.clickPendingIntent(this))
-            .setSmallIcon(R.drawable.filled_timer)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setAutoCancel(true)
-            .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
-            .clearActions()
-            .build()
+        val notification =
+            NotificationCompat
+                .Builder(this, NOTIFICATION_TIMER_RINGTONE_CHANNEL_ID)
+                .setContentTitle("Pomodoro ended")
+                .setContentText("Timer is over")
+                .setContentIntent(ServiceHelper.clickPendingIntent(this))
+                .setSmallIcon(R.drawable.filled_timer)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setAutoCancel(true)
+                .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
+                .clearActions()
+                .build()
 
         notificationManager.notify(NOTIFICATION_TIMER_RINGTONE_ID, notification)
     }
@@ -292,7 +304,7 @@ class CountdownService : Service() {
         coroutineScope.cancel()
     }
 
-    inner class CountdownBinder: Binder() {
+    inner class CountdownBinder : Binder() {
         fun getService(): CountdownService = this@CountdownService
     }
 }
@@ -305,7 +317,7 @@ data class NotificationAction(
 private fun addNotificationActions(
     actionList: List<NotificationAction>,
     notificationBuilder: NotificationCompat.Builder,
-    notificationManager: NotificationManager
+    notificationManager: NotificationManager,
 ) {
     notificationBuilder.mActions.clear()
     actionList.forEachIndexed { index, action ->
@@ -314,8 +326,8 @@ private fun addNotificationActions(
             NotificationCompat.Action(
                 0,
                 action.title,
-                action.intent
-            )
+                action.intent,
+            ),
         )
     }
     notificationManager.notify(NOTIFICATION_TICK_ID, notificationBuilder.build())
@@ -326,5 +338,5 @@ enum class CountdownState {
     Started,
     Paused,
     Reset,
-    Closed
+    Closed,
 }

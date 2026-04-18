@@ -45,9 +45,10 @@ fun TimerProgressIndicator(
     )
 
     Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(999.dp))
-            .background(containerColor),
+        modifier =
+            modifier
+                .clip(RoundedCornerShape(999.dp))
+                .background(containerColor),
         contentAlignment = Alignment.Center,
     ) {
         // Duplicated because strokeCap was also applied to the tracked stretch, which is unwanted
@@ -57,7 +58,7 @@ fun TimerProgressIndicator(
             color = trackColor,
             trackColor = Color.Transparent,
             strokeWidth = strokeWidth,
-            strokeCap = StrokeCap.Butt
+            strokeCap = StrokeCap.Butt,
         )
         CircularProgressIndicator(
             modifier = Modifier.fillMaxSize(),
@@ -84,9 +85,10 @@ private fun TimerProgressIndicatorPreview() {
             PomidorkiTheme(it) {
                 Surface {
                     TimerProgressIndicator(
-                        modifier = Modifier
-                            .padding(24.dp)
-                            .size(TimerProgressIndicatorDefaults.Size),
+                        modifier =
+                            Modifier
+                                .padding(24.dp)
+                                .size(TimerProgressIndicatorDefaults.Size),
                         progress = 0.65f,
                         timerText = "12:34",
                     )

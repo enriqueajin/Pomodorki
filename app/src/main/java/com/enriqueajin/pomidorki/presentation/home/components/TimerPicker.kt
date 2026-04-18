@@ -39,62 +39,66 @@ fun TimerPicker(
     items: List<String>,
     containerColor: Color,
     indicatorColor: Color,
-    onTabSelected: (Int) -> Unit
+    onTabSelected: (Int) -> Unit,
 ) {
-
     val tabRowTestTag = stringResource(id = R.string.timer_picker_tab_row)
 
     TabRow(
-        modifier = modifier
-            .clip(RoundedCornerShape(100))
-            .semantics {
-                contentDescription = tabRowTestTag
-            },
+        modifier =
+            modifier
+                .clip(RoundedCornerShape(100))
+                .semantics {
+                    contentDescription = tabRowTestTag
+                },
         selectedTabIndex = selected,
         containerColor = containerColor,
         indicator = { tabPositions ->
             TabRowDefaults.apply {
                 Box(
-                    modifier = Modifier
-                        .tabIndicatorOffset(tabPositions[selected])
-                        .fillMaxHeight()
-                        .padding(7.dp)
-                        .background(
-                            color = indicatorColor,
-                            shape = RoundedCornerShape(100)
-                        )
+                    modifier =
+                        Modifier
+                            .tabIndicatorOffset(tabPositions[selected])
+                            .fillMaxHeight()
+                            .padding(7.dp)
+                            .background(
+                                color = indicatorColor,
+                                shape = RoundedCornerShape(100),
+                            ),
                 )
             }
         },
     ) {
         items.forEachIndexed { index, tab ->
             Tab(
-                modifier = Modifier
-                    .zIndex(1f)
-                    .height(55.dp)
-                    .semantics {
-                        contentDescription = tab
-                    },
-                selected = selected == index ,
+                modifier =
+                    Modifier
+                        .zIndex(1f)
+                        .height(55.dp)
+                        .semantics {
+                            contentDescription = tab
+                        },
+                selected = selected == index,
                 onClick = {
                     onTabSelected(index)
                 },
             ) {
-                val font = if (selected == index) {
-                    R.font.montserrat_medium
-                } else {
-                    R.font.montserrat_regular
-                }
+                val font =
+                    if (selected == index) {
+                        R.font.montserrat_medium
+                    } else {
+                        R.font.montserrat_regular
+                    }
 
                 Text(
                     text = tab,
                     color = Color.White,
                     fontSize = 14.sp,
-                    fontFamily = FontFamily(
-                        Font(
-                            resId = font
-                        )
-                    )
+                    fontFamily =
+                        FontFamily(
+                            Font(
+                                resId = font,
+                            ),
+                        ),
                 )
             }
         }
@@ -113,6 +117,6 @@ fun TimerPickerPreview() {
         items = pomodoroTabItems,
         containerColor = pinkSecondary,
         indicatorColor = darkPink,
-        onTabSelected = { selected = it }
+        onTabSelected = { selected = it },
     )
 }
