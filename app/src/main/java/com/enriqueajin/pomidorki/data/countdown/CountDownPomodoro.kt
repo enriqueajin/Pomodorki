@@ -32,11 +32,12 @@ class CountDownPomodoro @Inject constructor(
 
     private val _selectedTimer = MutableStateFlow(0)
     private val _durationSettings = MutableStateFlow(UserSettingsState())
-    private val _timeLeft: MutableStateFlow<Long> = MutableStateFlow(getInitialMillis(_selectedTimer.value))
+    private val _initialMillis: MutableStateFlow<Long> = MutableStateFlow(0L)
+    val initialMillis = _initialMillis.asStateFlow()
+    private val _timeLeft: MutableStateFlow<Long> = MutableStateFlow(updateInitialMillis(_selectedTimer.value))
     val timeLeft = _timeLeft.asStateFlow()
 
     private var isActive by mutableStateOf(false)
-    private var initialMillis: Long = 0
     private val countDownInterval = 1_000L
 
     init {
@@ -72,7 +73,7 @@ class CountDownPomodoro @Inject constructor(
                 // Delay to make sure that timeLeft = 0 first, and then reset to initialMillis
                 scope.launch {
                     delay(100L)
-                    _timeLeft.value = initialMillis
+                    _timeLeft.value = _initialMillis.value
                     isActive = false
                 }
             }
@@ -87,21 +88,22 @@ class CountDownPomodoro @Inject constructor(
     fun reset() {
         isActive = false
         countDownTimer?.cancel()
-        _timeLeft.value = initialMillis
+        _timeLeft.value = _initialMillis.value
     }
 
-    private fun getInitialMillis(timerIndex: Int): Long {
-        initialMillis = when (timerIndex) {
+    private fun updateInitialMillis(timerIndex: Int): Long {
+        val millis = when (timerIndex) {
             0 -> TimeUnit.MINUTES.toMillis(_durationSettings.value.pomodoroDuration)
             1 -> TimeUnit.MINUTES.toMillis(_durationSettings.value.shortBreakDuration)
             2 -> TimeUnit.MINUTES.toMillis(_durationSettings.value.longBreakDuration)
             else -> TimeUnit.MINUTES.toMillis(_durationSettings.value.pomodoroDuration)
         }
-        return initialMillis
+        _initialMillis.value = millis
+        return millis
     }
 
     fun updateSelectedTimer(selectedTimer: Int) {
         _selectedTimer.value = selectedTimer
-        _timeLeft.value = getInitialMillis(selectedTimer)
+        _timeLeft.value = updateInitialMillis(selectedTimer)
     }
 }
