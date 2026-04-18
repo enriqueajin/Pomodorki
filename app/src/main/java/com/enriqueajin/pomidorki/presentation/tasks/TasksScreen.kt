@@ -36,14 +36,12 @@ import com.enriqueajin.pomidorki.presentation.tasks.components.StatusFilters
 import com.enriqueajin.pomidorki.presentation.tasks.components.TaskItem
 
 @Composable
-fun TasksScreenRoot(
-    tasksViewModel: TasksViewModel = hiltViewModel()
-) {
+fun TasksScreenRoot(tasksViewModel: TasksViewModel = hiltViewModel()) {
     val state by tasksViewModel.uiState.collectAsStateWithLifecycle()
 
     TasksScreen(
         state = state,
-        event = tasksViewModel::onEvent
+        event = tasksViewModel::onEvent,
     )
 }
 
@@ -51,14 +49,13 @@ fun TasksScreenRoot(
 private fun TasksScreen(
     modifier: Modifier = Modifier,
     state: TasksScreenState,
-    event: (TasksScreenEvent) -> Unit
+    event: (TasksScreenEvent) -> Unit,
 ) {
-
     when {
         state.loading == true -> {
             Box(
                 modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 CircularProgressIndicator()
             }
@@ -79,7 +76,7 @@ private fun TasksScreen(
         else -> {
             SuccessScreen(
                 state = state,
-                event = event
+                event = event,
             )
         }
     }
@@ -89,18 +86,18 @@ private fun TasksScreen(
 fun SuccessScreen(
     modifier: Modifier = Modifier,
     state: TasksScreenState,
-    event: (TasksScreenEvent) -> Unit
+    event: (TasksScreenEvent) -> Unit,
 ) {
     Column(modifier = Modifier.padding(horizontal = 10.dp)) {
         Row(
             modifier = modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             StatusFilters(
                 selected = state.selectedStatus ?: Status.TODO.label,
                 onSelectedChange = { event(TasksScreenEvent.UpdateSelectedStatus(it)) },
-                onChipClick = { }
+                onChipClick = { },
             )
             val sortingOptions = arrayOf("Sort by priority", "Sort by title", "Sort by category")
             val groupingOptions = arrayOf("Group by category", "Group by priority")
@@ -116,20 +113,26 @@ fun SuccessScreen(
                     dropdownItemList = sortingOptions,
                     onDropdownItemClick = { item ->
                         isSortingMenuExpanded = false
-                        when(item) {
-                            "Sort by priority" -> { event(TasksScreenEvent.UpdateCurrentSorting(Sorting.Priority)) }
-                            "Sort by title" -> { event(TasksScreenEvent.UpdateCurrentSorting(Sorting.Title)) }
-                            "Sort by category" -> { event(TasksScreenEvent.UpdateCurrentSorting(Sorting.Category)) }
+                        when (item) {
+                            "Sort by priority" -> {
+                                event(TasksScreenEvent.UpdateCurrentSorting(Sorting.Priority))
+                            }
+                            "Sort by title" -> {
+                                event(TasksScreenEvent.UpdateCurrentSorting(Sorting.Title))
+                            }
+                            "Sort by category" -> {
+                                event(TasksScreenEvent.UpdateCurrentSorting(Sorting.Category))
+                            }
                         }
-                    }
+                    },
                 )
                 Spacer(modifier = Modifier.width(10.dp))
                 ActionDropdownMenu(
                     modifier.size(28.dp),
                     expanded = isGroupingMenuExpanded,
-                    icon = if(state.groupedTasks != null) Icons.Rounded.Clear else Icons.Rounded.Menu,
+                    icon = if (state.groupedTasks != null) Icons.Rounded.Clear else Icons.Rounded.Menu,
                     onExpandedChange = {
-                        if(state.groupedTasks != null) {
+                        if (state.groupedTasks != null) {
                             event(TasksScreenEvent.UpdateCurrentGrouping(null))
                         } else {
                             isGroupingMenuExpanded = it
@@ -138,33 +141,36 @@ fun SuccessScreen(
                     dropdownItemList = groupingOptions,
                     onDropdownItemClick = { item ->
                         isGroupingMenuExpanded = false
-                        when(item) {
-                            "Group by category" -> { event(TasksScreenEvent.UpdateCurrentGrouping(Grouping.Category)) }
-                            "Group by priority" -> { event(TasksScreenEvent.UpdateCurrentGrouping(Grouping.Priority)) }
+                        when (item) {
+                            "Group by category" -> {
+                                event(TasksScreenEvent.UpdateCurrentGrouping(Grouping.Category))
+                            }
+                            "Group by priority" -> {
+                                event(TasksScreenEvent.UpdateCurrentGrouping(Grouping.Priority))
+                            }
                         }
-                    }
+                    },
                 )
             }
         }
-        if(!state.groupedTasks.isNullOrEmpty()) {
+        if (!state.groupedTasks.isNullOrEmpty()) {
             GroupedTasks(groupedTasks = state.groupedTasks)
         } else {
             state.tasks?.let {
                 LazyColumn {
                     items(
                         items = it,
-                        key = { item -> item.hashCode() }
+                        key = { item -> item.hashCode() },
                     ) { task ->
                         TaskItem(
                             task = task,
-                            onTaskClick = {}
+                            onTaskClick = {},
                         )
                     }
                 }
             }
         }
     }
-
 }
 
 @Composable
@@ -174,20 +180,19 @@ fun GroupedTasks(
 ) {
     LazyColumn {
         groupedTasks.forEach { (category, tasks) ->
-            if(tasks.isNotEmpty()) {
+            if (tasks.isNotEmpty()) {
                 item {
                     Text(text = category)
                 }
                 items(
                     items = tasks,
-                    key = { it.hashCode() }
+                    key = { it.hashCode() },
                 ) { task ->
                     TaskItem(
                         task = task,
-                        onTaskClick = {}
+                        onTaskClick = {},
                     )
                 }
-
             }
         }
     }
@@ -198,6 +203,6 @@ fun GroupedTasks(
 fun TasksScreenPreview() {
     TasksScreen(
         state = TasksScreenState(tasks = getTasks()),
-        event = {}
+        event = {},
     )
 }

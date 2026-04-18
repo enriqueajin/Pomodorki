@@ -22,4 +22,3 @@ internal object TimerProgressIndicatorTokens {
     @Composable
     fun textColor(): Color = MaterialTheme.colorScheme.onSurface
 }
-

@@ -19,8 +19,9 @@ fun EmptyTopBar(modifier: Modifier = Modifier) {
     TopAppBar(
         modifier = Modifier.height(0.dp),
         title = { Text(text = "") },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = pinkPrimary
-        )
+        colors =
+            TopAppBarDefaults.topAppBarColors(
+                containerColor = pinkPrimary,
+            ),
     )
 }

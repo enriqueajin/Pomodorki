@@ -26,8 +26,8 @@ data class Filter(
     val isSelected: Boolean,
 )
 
-fun getFilters(): List<Filter> {
-    return listOf(
+fun getFilters(): List<Filter> =
+    listOf(
         Filter(
             label = Status.TODO.label,
             icon = Icons.Default.DateRange,
@@ -42,9 +42,8 @@ fun getFilters(): List<Filter> {
             label = Status.DONE.label,
             icon = Icons.Default.Check,
             isSelected = false,
-        )
+        ),
     )
-}
 
 @Composable
 fun StatusFilters(
@@ -56,7 +55,7 @@ fun StatusFilters(
     val options = getFilters()
 
     Row(
-        modifier = modifier
+        modifier = modifier,
     ) {
         LazyRow {
             items(options) { filter ->
@@ -64,7 +63,7 @@ fun StatusFilters(
                     label = filter.label,
                     isSelected = selected == filter.label,
                     onSelectedChange = { onSelectedChange(filter.label) },
-                    onChipClick = onChipClick
+                    onChipClick = onChipClick,
                 )
             }
         }
@@ -87,10 +86,11 @@ fun FilterItem(
             onSelectedChange(label)
         },
         label = { Text(text = label) },
-        colors = FilterChipDefaults.filterChipColors(
-            selectedContainerColor = Color.Black,
-            selectedLabelColor = MaterialTheme.colorScheme.surface
-        )
+        colors =
+            FilterChipDefaults.filterChipColors(
+                selectedContainerColor = Color.Black,
+                selectedLabelColor = MaterialTheme.colorScheme.surface,
+            ),
     )
 }
 
@@ -100,6 +100,6 @@ fun PriorityFiltersPreview(modifier: Modifier = Modifier) {
     StatusFilters(
         selected = Status.IN_PROGRESS.label,
         onSelectedChange = {},
-        onChipClick = {}
+        onChipClick = {},
     )
 }

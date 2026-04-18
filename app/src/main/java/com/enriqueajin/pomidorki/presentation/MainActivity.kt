@@ -17,7 +17,6 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-
     private val viewModel: TimerScreenViewModel by viewModels()
     private var isBound = false
 
@@ -31,19 +30,23 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private val connection = object : ServiceConnection {
-        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-            println("The service is BOUND!")
-            val binder = service as CountdownService.CountdownBinder
-            val countdownService = binder.getService()
-            viewModel.onServiceConnected(countdownService)
-            isBound = true
-        }
+    private val connection =
+        object : ServiceConnection {
+            override fun onServiceConnected(
+                name: ComponentName?,
+                service: IBinder?,
+            ) {
+                println("The service is BOUND!")
+                val binder = service as CountdownService.CountdownBinder
+                val countdownService = binder.getService()
+                viewModel.onServiceConnected(countdownService)
+                isBound = true
+            }
 
-        override fun onServiceDisconnected(name: ComponentName?) {
-            isBound = false
+            override fun onServiceDisconnected(name: ComponentName?) {
+                isBound = false
+            }
         }
-    }
 
     override fun onStart() {
         super.onStart()
@@ -55,7 +58,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onStop() {
         super.onStop()
-        if(isBound) {
+        if (isBound) {
             unbindService(connection)
             isBound = false
         }

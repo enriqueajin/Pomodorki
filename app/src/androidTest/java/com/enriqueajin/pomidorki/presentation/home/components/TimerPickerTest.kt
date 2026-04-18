@@ -15,7 +15,6 @@ import org.junit.Rule
 import org.junit.Test
 
 class TimerPickerTest {
-
     @get:Rule val composeTestRule = createComposeRule()
 
     private lateinit var context: Context
@@ -24,17 +23,18 @@ class TimerPickerTest {
     @Before
     fun setUp() {
         context = InstrumentationRegistry.getInstrumentation().targetContext
-        tabRowItems = TabRowItems(
-            pomodoro = context.resources.getString(R.string.tab_pomodoro),
-            shortBreak = context.resources.getString(R.string.tab_short_break),
-           longBreak = context.resources.getString(R.string.tab_long_break),
-        )
+        tabRowItems =
+            TabRowItems(
+                pomodoro = context.resources.getString(R.string.tab_pomodoro),
+                shortBreak = context.resources.getString(R.string.tab_short_break),
+                longBreak = context.resources.getString(R.string.tab_long_break),
+            )
 
         composeTestRule.setContent {
             TimerPicker(
                 modifier = Modifier,
                 items = pomodoroTabItems,
-                onTabSelected = {}
+                onTabSelected = {},
             )
         }
     }

@@ -10,7 +10,7 @@ import androidx.compose.runtime.Composable
 fun BottomNavigation(
     items: List<BottomNavigationItem>,
     selectedItem: Int,
-    onItemClick: (String) -> Unit
+    onItemClick: (String) -> Unit,
 ) {
     NavigationBar {
         items.forEachIndexed { index, item ->
@@ -21,10 +21,10 @@ fun BottomNavigation(
                     val icon = if (index == selectedItem) item.selectedItem else item.unselectedItem
                     Icon(
                         imageVector = icon,
-                        contentDescription = null
+                        contentDescription = null,
                     )
                 },
-                label = { Text(text = item.text) }
+                label = { Text(text = item.text) },
             )
         }
     }

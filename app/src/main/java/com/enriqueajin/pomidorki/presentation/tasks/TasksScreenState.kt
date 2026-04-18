@@ -8,5 +8,5 @@ data class TasksScreenState(
     val selectedStatus: String? = null,
     val isDropdownExpanded: Boolean = false,
     val loading: Boolean? = true,
-    val error: String? = null
+    val error: String? = null,
 )

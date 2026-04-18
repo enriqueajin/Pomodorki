@@ -17,16 +17,17 @@ fun CountdownView(
     formattedText: String,
     textColor: Color,
     fontSize: TextUnit = 82.sp,
-    fontFamily: FontFamily = FontFamily(
-        Font(resId = R.font.bebasneue_regular)
-    ),
+    fontFamily: FontFamily =
+        FontFamily(
+            Font(resId = R.font.bebasneue_regular),
+        ),
 ) {
     Text(
         modifier = modifier,
         text = formattedText,
         fontSize = fontSize,
         color = textColor,
-        fontFamily = fontFamily
+        fontFamily = fontFamily,
     )
 }
 
@@ -35,6 +36,6 @@ fun CountdownView(
 fun CountdownTimerPreview() {
     CountdownView(
         formattedText = "25:00",
-        textColor = Color.Black
+        textColor = Color.Black,
     )
 }

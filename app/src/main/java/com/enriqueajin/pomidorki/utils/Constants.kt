@@ -8,10 +8,9 @@ import com.enriqueajin.pomidorki.presentation.navigation.BottomNavigationItem
 import com.enriqueajin.pomidorki.presentation.navigation.Route
 
 object Constants {
-
     @Composable
-    fun getNavigationItems(): List<BottomNavigationItem> {
-        return listOf(
+    fun getNavigationItems(): List<BottomNavigationItem> =
+        listOf(
             BottomNavigationItem(
                 text = "Timer",
                 route = Route.Timer.route,
@@ -31,15 +30,15 @@ object Constants {
                 unselectedItem = ImageVector.vectorResource(R.drawable.outlined_stats),
             ),
         )
-    }
 
     val pomodoroTabItems = listOf("Pomodoro", "Short Break", "Long Break")
     val screensWithTopBar = arrayOf(Route.Timer.route, Route.Settings.route)
-    val screensWithBottomBar = arrayOf(
-        Route.Timer.route,
-        Route.Tasks.route,
-        Route.Stats.route
-    )
+    val screensWithBottomBar =
+        arrayOf(
+            Route.Timer.route,
+            Route.Tasks.route,
+            Route.Stats.route,
+        )
 
     // Countdown Timer
     const val ACTION_SERVICE_START = "ACTION_SERVICE_START"
@@ -76,5 +75,4 @@ object Constants {
     const val RESET_BUTTON_TITLE = "RESET"
     const val CLOSE_BUTTON_TITLE = "CLOSE"
     const val RESUME_BUTTON_TITLE = "RESUME"
-
 }

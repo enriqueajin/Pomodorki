@@ -24,20 +24,18 @@ private const val USER_SETTINGS = "user_settings"
 @Module
 @InstallIn(SingletonComponent::class)
 class DataStoreModule {
-
     @Provides
     @Singleton
-    fun provideDataStore(@ApplicationContext context: Context): DataStore<Preferences> {
-        return PreferenceDataStoreFactory.create(
+    fun provideDataStore(
+        @ApplicationContext context: Context,
+    ): DataStore<Preferences> =
+        PreferenceDataStoreFactory.create(
             corruptionHandler = ReplaceFileCorruptionHandler { emptyPreferences() },
             scope = CoroutineScope(Dispatchers.IO + SupervisorJob()),
-            produceFile = { context.preferencesDataStoreFile(USER_SETTINGS) }
+            produceFile = { context.preferencesDataStoreFile(USER_SETTINGS) },
         )
-    }
 
     @Provides
     @Singleton
-    fun provideUserSettingsRepository(dataStore: DataStore<Preferences>): UserSettingsRepository {
-        return UserSettingsRepositoryImpl(dataStore)
-    }
+    fun provideUserSettingsRepository(dataStore: DataStore<Preferences>): UserSettingsRepository = UserSettingsRepositoryImpl(dataStore)
 }
