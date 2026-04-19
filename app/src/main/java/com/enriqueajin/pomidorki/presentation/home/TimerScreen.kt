@@ -334,27 +334,22 @@ fun TimerScreen(
                         contentDescription = null,
                     )
                     Box(
-                        modifier = Modifier.padding(top = 42.dp),
+                        modifier =
+                            Modifier
+                                .background(
+                                    color = MaterialTheme.colorScheme.background,
+                                    shape = RoundedCornerShape(999.dp),
+                                ).padding(16.dp),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Box(
-                            modifier =
-                                Modifier
-                                    .background(
-                                        color = MaterialTheme.colorScheme.background,
-                                        shape = RoundedCornerShape(999.dp),
-                                    ).padding(16.dp),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            TimerProgressIndicator(
-                                modifier = Modifier.size(TimerProgressIndicatorDefaults.Size),
-                                progress = uiState.timerProgress,
-                                timerText = uiState.timerText,
-                                indicatorColor = timerArcColor,
-                                trackColor = timeElapsedArcColor,
-                                textColor = timerTextColor,
-                            )
-                        }
+                        TimerProgressIndicator(
+                            modifier = Modifier.size(TimerProgressIndicatorDefaults.Size),
+                            progress = uiState.timerProgress,
+                            timerText = uiState.timerText,
+                            indicatorColor = timerArcColor,
+                            trackColor = timeElapsedArcColor,
+                            textColor = timerTextColor,
+                        )
                     }
                     Spacer(modifier = Modifier.height(35.dp))
                 }
