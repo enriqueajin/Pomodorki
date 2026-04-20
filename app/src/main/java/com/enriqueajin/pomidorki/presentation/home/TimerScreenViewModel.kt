@@ -1,17 +1,20 @@
 package com.enriqueajin.pomidorki.presentation.home
 
-import android.content.Context
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.enriqueajin.pomidorki.data.countdown.ServiceHelper
 import com.enriqueajin.pomidorki.data.model.PomodoroServiceData
 import com.enriqueajin.pomidorki.data.services.CountdownService
-import com.enriqueajin.pomidorki.data.services.CountdownState
+import com.enriqueajin.pomidorki.data.services.CountdownState.Paused
+import com.enriqueajin.pomidorki.data.services.CountdownState.Started
 import com.enriqueajin.pomidorki.domain.repository.UserSettingsRepository
 import com.enriqueajin.pomidorki.presentation.home.TimerScreenContract.Effect
+import com.enriqueajin.pomidorki.presentation.home.TimerScreenContract.Event
 import com.enriqueajin.pomidorki.presentation.home.TimerScreenContract.State
+import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_CLOSE
+import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_RESET
 import com.enriqueajin.pomidorki.utils.PreferencesKeys.SELECTED_TIMER
+import com.enriqueajin.pomidorki.utils.updateState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -40,7 +43,6 @@ class TimerScreenViewModel
         }
 
         fun onServiceConnected(service: CountdownService) {
-            println("onServiceConnected was called!")
             service.observeTimeLeft()
             viewModelScope.launch {
                 service.serviceData.collect(::updateStateServiceData)
@@ -75,17 +77,35 @@ class TimerScreenViewModel
             }
         }
 
-        fun onEvent(event: TimerScreenEvent) {
+        fun onEvent(event: Event) =
             when (event) {
-                is TimerScreenEvent.TriggerPomodoro -> triggerPomodoro(event.context, event.action)
-                is TimerScreenEvent.UpdateSelectedTimer -> updateSelectedTimer(event.selected)
+                is Event.OnAlertConfirmClick -> handleOnAlertConfirmClick(event.newTabIndex)
+                is Event.OnTabClicked -> handleTabClick(event.index)
+                Event.OnAlertCancelClick -> _uiState.updateState { it.copy(isDialogOpen = false) }
+                Event.OnRestartIconClick -> openDialog(_uiState.value.selectedTimer)
+            }
+
+        private fun handleOnAlertConfirmClick(newTabIndex: Int) {
+            _uiState.updateState { it.copy(selectedTimer = newTabIndex, isDialogOpen = false) }
+            val action = if (_uiState.value.hasTimerStarted()) ACTION_SERVICE_CLOSE else ACTION_SERVICE_RESET
+            _uiEffects.trySend(Effect.TriggerForegroundService(action))
+        }
+
+        private fun handleTabClick(index: Int) {
+            val state = _uiState.value
+            if (state.selectedTimer == index) return
+            if (state.hasTimerStarted()) {
+                openDialog(index)
+            } else {
+                _uiState.updateState { it.copy(selectedTimer = index) }
+                updateDataStore(index)
+                _uiEffects.trySend(Effect.TriggerIntent(index))
             }
         }
 
-        private fun updateSelectedTimer(selected: Int) {
-            _uiEffects.trySend(Effect.UpdateSelectedTimer(selected))
-            updateDataStore(selected)
-            _uiState.update { it.copy(selectedTimer = selected) }
+        private fun openDialog(tabToConfirmIndex: Int) {
+            _uiState.updateState { it.copy(isDialogOpen = true) }
+            _uiEffects.trySend(Effect.TimerToBeConfirmed(tabToConfirmIndex))
         }
 
         private fun updateDataStore(selectedTimer: Int) {
@@ -97,12 +117,5 @@ class TimerScreenViewModel
             }
         }
 
-        private fun triggerPomodoro(
-            context: Context,
-            action: String,
-        ) {
-            ServiceHelper.triggerForegroundService(context, action)
-        }
-
-        private fun State.hasTimerStarted(): Boolean = currentState == CountdownState.Started || currentState == CountdownState.Paused
+        private fun State.hasTimerStarted(): Boolean = currentState == Started || currentState == Paused
     }
