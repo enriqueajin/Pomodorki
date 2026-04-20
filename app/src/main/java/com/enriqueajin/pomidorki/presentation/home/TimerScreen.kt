@@ -41,7 +41,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -97,9 +96,7 @@ import com.enriqueajin.pomidorki.presentation.ui.theme.shortBreakBackground
 import com.enriqueajin.pomidorki.presentation.ui.theme.shortBreakPickerContainer
 import com.enriqueajin.pomidorki.presentation.ui.theme.shortBreakPickerIndicator
 import com.enriqueajin.pomidorki.presentation.ui.theme.shortBreakTimerText
-import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_CLOSE
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_PAUSE
-import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_RESET
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_START
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_TIMER_TYPE
 import com.enriqueajin.pomidorki.utils.Constants.pomodoroTabItems
@@ -111,16 +108,25 @@ fun TimerScreenRoot(
 ) {
     val uiState by timerScreenViewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    var tabToConfirm by rememberSaveable { mutableIntStateOf(0) }
 
     LaunchedEffect(Unit) {
         timerScreenViewModel.uiEffects.collect { effect ->
             when (effect) {
-                is Effect.UpdateSelectedTimer -> {
+                is Effect.TriggerIntent -> {
                     val intent =
                         Intent(context, CountdownService::class.java).apply {
-                            putExtra(ACTION_TIMER_TYPE, effect.selected)
+                            putExtra(ACTION_TIMER_TYPE, uiState.selectedTimer)
                         }
                     context.startService(intent)
+                }
+
+                is Effect.TimerToBeConfirmed -> tabToConfirm = effect.index
+                is Effect.TriggerForegroundService -> {
+                    ServiceHelper.triggerForegroundService(
+                        context = context,
+                        action = effect.action,
+                    )
                 }
             }
         }
@@ -129,19 +135,19 @@ fun TimerScreenRoot(
     TimerScreen(
         event = timerScreenViewModel::onEvent,
         uiState = uiState,
+        tabToConfirm = tabToConfirm,
         onSettingsIconClick = onSettingsIconClick,
     )
 }
 
 @Composable
 fun TimerScreen(
-    event: (TimerScreenEvent) -> Unit,
+    event: (TimerScreenContract.Event) -> Unit,
     uiState: State,
+    tabToConfirm: Int,
     onSettingsIconClick: () -> Unit,
 ) {
     val context = LocalContext.current
-    var selected by rememberSaveable { mutableIntStateOf(0) }
-    var tabToConfirm by rememberSaveable { mutableIntStateOf(0) }
     val backgroundColor =
         remember(uiState.selectedTimer) {
             when (uiState.selectedTimer) {
@@ -232,7 +238,6 @@ fun TimerScreen(
                 else -> R.drawable.ic_play
             }
         }
-    var isDialogOpen by remember { mutableStateOf(false) }
 
     val dialogTitle =
         remember(uiState.currentState) {
@@ -251,12 +256,6 @@ fun TimerScreen(
                 R.string.dialog_reset_text
             }
         }
-
-    LaunchedEffect(uiState.currentState) {
-        if (isDialogOpen) {
-            isDialogOpen = false
-        }
-    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -304,19 +303,7 @@ fun TimerScreen(
                         items = pomodoroTabItems,
                         containerColor = containerColor,
                         indicatorColor = indicatorColor,
-                        onTabSelected = { index ->
-                            when (uiState.currentState) {
-                                CountdownState.Started, CountdownState.Paused -> {
-                                    if (uiState.selectedTimer != index) {
-                                        tabToConfirm = index
-                                        isDialogOpen = true
-                                    }
-                                }
-                                else -> {
-                                    event(TimerScreenEvent.UpdateSelectedTimer(index))
-                                }
-                            }
-                        },
+                        onTabSelected = { event(TimerScreenContract.Event.OnTabClicked(it)) },
                     )
                 }
                 Column(
@@ -449,7 +436,7 @@ fun TimerScreen(
                                             start.linkTo(mainButton.end)
                                         },
                                 onClick = {
-                                    isDialogOpen = true
+                                    event(TimerScreenContract.Event.OnRestartIconClick)
                                 },
                             ) {
                                 Icon(
@@ -480,26 +467,13 @@ fun TimerScreen(
                         onGoToAppSettingsClick = { context.openAppSettings() },
                     )
                 }
-            if (isDialogOpen) {
+            if (uiState.isDialogOpen) {
                 AlertDialog(
-                    onDismissRequest = { isDialogOpen = false },
+                    onDismissRequest = { event(TimerScreenContract.Event.OnAlertCancelClick) },
                     confirmButton = {
                         TextButton(
                             onClick = {
-                                val action =
-                                    when (uiState.currentState) {
-                                        CountdownState.Started, CountdownState.Paused -> {
-                                            event(TimerScreenEvent.UpdateSelectedTimer(tabToConfirm))
-                                            ACTION_SERVICE_CLOSE
-                                        }
-                                        else -> ACTION_SERVICE_RESET
-                                    }
-
-                                ServiceHelper.triggerForegroundService(
-                                    context = context,
-                                    action = action,
-                                )
-                                isDialogOpen = false
+                                event(TimerScreenContract.Event.OnAlertConfirmClick(tabToConfirm))
                             },
                             content = {
                                 Text(text = stringResource(R.string.dialog_yes_button))
@@ -508,9 +482,7 @@ fun TimerScreen(
                     },
                     dismissButton = {
                         TextButton(
-                            onClick = {
-                                isDialogOpen = false
-                            },
+                            onClick = { event(TimerScreenContract.Event.OnAlertCancelClick) },
                             content = {
                                 Text(text = stringResource(R.string.dialog_no_button))
                             },
@@ -544,7 +516,8 @@ private fun startCountdownTimerService(
 fun TimerScreenPreview() {
     TimerScreen(
         event = {},
-        uiState = State(),
+        uiState = State(currentState = CountdownState.Paused),
+        tabToConfirm = 0,
         onSettingsIconClick = {},
     )
 }
