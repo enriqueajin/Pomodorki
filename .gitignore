@@ -15,3 +15,4 @@ google-services.json
 
 # Local Gradle cache used by this repo (do not commit)
 .gradle-user-home/
+.agents/

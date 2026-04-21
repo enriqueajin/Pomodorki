@@ -58,6 +58,7 @@ class CountDownPomodoro
                             shortBreakDuration = shortBreak,
                             longBreakDuration = longBreak,
                         )
+                    _timeLeft.value = updateInitialMillis(selectedTimer.value)
                 }
             }
         }
