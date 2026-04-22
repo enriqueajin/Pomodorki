@@ -36,7 +36,6 @@ class MainActivity : ComponentActivity() {
                 name: ComponentName?,
                 service: IBinder?,
             ) {
-                println("The service is BOUND!")
                 val binder = service as CountdownService.CountdownBinder
                 val countdownService = binder.getService()
                 viewModel.onServiceConnected(countdownService)
@@ -44,6 +43,7 @@ class MainActivity : ComponentActivity() {
             }
 
             override fun onServiceDisconnected(name: ComponentName?) {
+                viewModel.onServiceDisconnected()
                 isBound = false
             }
         }
@@ -51,8 +51,7 @@ class MainActivity : ComponentActivity() {
     override fun onStart() {
         super.onStart()
         Intent(this, CountdownService::class.java).also {
-            val result = bindService(it, connection, BIND_AUTO_CREATE)
-            println("The result was: $result")
+            bindService(it, connection, BIND_AUTO_CREATE)
         }
     }
 
