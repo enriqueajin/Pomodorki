@@ -16,6 +16,7 @@ import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_RESET
 import com.enriqueajin.pomidorki.utils.PreferencesKeys.SELECTED_TIMER
 import com.enriqueajin.pomidorki.utils.updateState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -38,15 +39,23 @@ class TimerScreenViewModel
         private val _uiEffects = Channel<Effect>()
         val uiEffects = _uiEffects.receiveAsFlow()
 
+        private var serviceDataJob: Job? = null
+
         init {
             checkInitialSelectedTimer()
         }
 
         fun onServiceConnected(service: CountdownService) {
-            service.observeTimeLeft()
-            viewModelScope.launch {
-                service.serviceData.collect(::updateStateServiceData)
-            }
+            serviceDataJob?.cancel()
+            serviceDataJob =
+                viewModelScope.launch {
+                    service.serviceData.collect(::updateStateServiceData)
+                }
+        }
+
+        fun onServiceDisconnected() {
+            serviceDataJob?.cancel()
+            serviceDataJob = null
         }
 
         private fun updateStateServiceData(data: PomodoroServiceData) {

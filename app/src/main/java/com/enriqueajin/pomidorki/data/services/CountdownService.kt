@@ -37,6 +37,8 @@ import com.enriqueajin.pomidorki.utils.TimeFormatter.formatTime
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -63,31 +65,50 @@ class CountdownService : Service() {
     private val _serviceData = MutableStateFlow(PomodoroServiceData())
     val serviceData = _serviceData.asStateFlow()
 
-    private val coroutineScope = CoroutineScope(Dispatchers.Default)
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
-    fun observeTimeLeft() {
-        coroutineScope.launch {
-            countdownTimer.initialMillis.collect { initialMillis ->
-                updateServiceData(initialMillis = initialMillis)
-            }
-        }
-        coroutineScope.launch {
-            countdownTimer.timeLeft.collect { timeLeft ->
-                if (timeLeft > 0L) {
-                    updateServiceData(timeLeft = timeLeft)
-                    updateNotification(timeLeft)
-                } else if (_serviceData.value.currentState == CountdownState.Started) {
-                    updateServiceData(timeLeft = 0L, currentState = CountdownState.Idle)
-                    notificationManager.cancel(NOTIFICATION_TICK_ID)
-                    stopForeground(STOP_FOREGROUND_REMOVE)
-                    stopSelf()
-                    notifyTimerOver()
+    private var observeTimeLeftJob: Job? = null
+
+    override fun onCreate() {
+        super.onCreate()
+        observeTimeLeft()
+    }
+
+    private fun observeTimeLeft() {
+        if (observeTimeLeftJob != null) return
+
+        observeTimeLeftJob =
+            serviceScope.launch {
+                launch {
+                    countdownTimer.initialMillis.collect { initialMillis ->
+                        updateServiceData(initialMillis = initialMillis)
+                    }
+                }
+                launch {
+                    countdownTimer.timeLeft.collect { timeLeft ->
+                        if (timeLeft > 0L) {
+                            updateServiceData(timeLeft = timeLeft)
+                            updateNotification(timeLeft)
+                        } else if (_serviceData.value.currentState == CountdownState.Started) {
+                            updateServiceData(timeLeft = 0L, currentState = CountdownState.Idle)
+                            notificationManager.cancel(NOTIFICATION_TICK_ID)
+                            stopForeground(STOP_FOREGROUND_REMOVE)
+                            stopSelf()
+                            notifyTimerOver()
+                        }
+                    }
                 }
             }
-        }
     }
 
     override fun onBind(intent: Intent?) = binder
+
+    override fun onDestroy() {
+        observeTimeLeftJob?.cancel()
+        observeTimeLeftJob = null
+        serviceScope.cancel()
+        super.onDestroy()
+    }
 
     override fun onStartCommand(
         intent: Intent?,
@@ -297,11 +318,6 @@ class CountdownService : Service() {
                 .build()
 
         notificationManager.notify(NOTIFICATION_TIMER_RINGTONE_ID, notification)
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        coroutineScope.cancel()
     }
 
     inner class CountdownBinder : Binder() {
