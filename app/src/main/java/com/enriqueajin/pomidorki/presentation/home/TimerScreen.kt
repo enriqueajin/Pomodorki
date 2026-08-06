@@ -116,7 +116,7 @@ fun TimerScreenRoot(
                 is Effect.TriggerIntent -> {
                     val intent =
                         Intent(context, CountdownService::class.java).apply {
-                            putExtra(ACTION_TIMER_TYPE, uiState.selectedTimer)
+                            putExtra(ACTION_TIMER_TYPE, effect.tabIndex)
                         }
                     context.startService(intent)
                 }
@@ -126,6 +126,7 @@ fun TimerScreenRoot(
                     ServiceHelper.triggerForegroundService(
                         context = context,
                         action = effect.action,
+                        timerType = effect.timerType,
                     )
                 }
             }

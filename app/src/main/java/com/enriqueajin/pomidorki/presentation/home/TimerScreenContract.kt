@@ -38,6 +38,7 @@ sealed interface TimerScreenContract {
 
         data class TriggerForegroundService(
             val action: String,
+            val timerType: Int,
         ) : Effect()
     }
 }
