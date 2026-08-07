@@ -9,8 +9,8 @@ import com.enriqueajin.pomidorki.utils.PreferencesKeys.LONG_BREAK_DURATION
 import com.enriqueajin.pomidorki.utils.PreferencesKeys.POMODORO_DURATION
 import com.enriqueajin.pomidorki.utils.PreferencesKeys.SHORT_BREAK_DURATION
 import com.enriqueajin.pomidorki.utils.getSetting
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
@@ -20,14 +20,16 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+import javax.inject.Named
 
 class CountDownPomodoro
     @Inject
     constructor(
         private val context: Context,
         private val userSettingsRepository: UserSettingsRepository,
+        @Named("countdown") private val dispatcher: CoroutineDispatcher,
     ) {
-        private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+        private val scope = CoroutineScope(SupervisorJob() + dispatcher)
 
         private var tickJob: Job? = null
         private var isRunning = false
@@ -68,23 +70,40 @@ class CountDownPomodoro
         fun start() {
             tickJob?.cancel()
             isRunning = true
+            val initialRemaining = _timeLeft.value
             val deadline = SystemClock.elapsedRealtime() + _timeLeft.value
             _deadlineElapsed.value = deadline
             tickJob =
                 scope.launch {
-                    while (isActive) {
-                        val left = (deadline - SystemClock.elapsedRealtime()).coerceAtLeast(0L)
-                        _timeLeft.value = left
-                        if (left == 0L) {
-                            _deadlineElapsed.value = 0L
-                            ServiceHelper.triggerForegroundService(context, ACTION_SERVICE_IDLE)
-                            // Emit 0 first, then restore initial duration for next start
-                            delay(100L)
-                            _timeLeft.value = _initialMillis.value
-                            isRunning = false
-                            break
+                    val displayJob =
+                        launch {
+                            var displayedSeconds = (initialRemaining + 999L) / 1_000L
+                            var delayMillis = initialRemaining % 1_000L
+                            if (delayMillis == 0L) delayMillis = 1_000L
+
+                            while (isActive && displayedSeconds > 0L) {
+                                delay(delayMillis)
+                                if (!isActive) break
+                                displayedSeconds--
+                                _timeLeft.value = displayedSeconds * 1_000L
+                                delayMillis = 1_000L
+                            }
                         }
-                        delay(((left - 1) % 1_000L) + 1L)
+
+                    try {
+                        delay(initialRemaining)
+                    } finally {
+                        displayJob.cancel()
+                    }
+
+                    if (isActive) {
+                        _deadlineElapsed.value = 0L
+                        _timeLeft.value = 0L
+                        ServiceHelper.triggerForegroundService(context, ACTION_SERVICE_IDLE)
+                        // Emit 0 first, then restore initial duration for next start
+                        delay(100L)
+                        _timeLeft.value = _initialMillis.value
+                        isRunning = false
                     }
                 }
         }

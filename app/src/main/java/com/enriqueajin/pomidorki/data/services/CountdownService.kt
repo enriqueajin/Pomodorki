@@ -33,7 +33,7 @@ import com.enriqueajin.pomidorki.utils.Constants.PAUSE_BUTTON_TITLE
 import com.enriqueajin.pomidorki.utils.Constants.RESET_BUTTON_TITLE
 import com.enriqueajin.pomidorki.utils.Constants.RESUME_BUTTON_TITLE
 import com.enriqueajin.pomidorki.utils.Constants.START_BUTTON_TITLE
-import com.enriqueajin.pomidorki.utils.TimeFormatter.formatTime
+import com.enriqueajin.pomidorki.utils.TimeFormatter.formatCountdownTime
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -303,7 +303,7 @@ class CountdownService : Service() {
     private fun updateNotification(timeLeft: Long) {
         val notification =
             notificationBuilder
-                .setContentText(timeLeft.formatTime())
+                .setContentText(timeLeft.formatCountdownTime())
                 .setContentIntent(ServiceHelper.clickPendingIntent(this))
                 .build()
 
