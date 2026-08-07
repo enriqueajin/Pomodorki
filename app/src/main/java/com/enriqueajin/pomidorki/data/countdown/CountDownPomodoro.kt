@@ -1,10 +1,7 @@
 package com.enriqueajin.pomidorki.data.countdown
 
 import android.content.Context
-import android.os.CountDownTimer
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import android.os.SystemClock
 import com.enriqueajin.pomidorki.domain.repository.UserSettingsRepository
 import com.enriqueajin.pomidorki.presentation.UserSettingsState
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_IDLE
@@ -14,10 +11,12 @@ import com.enriqueajin.pomidorki.utils.PreferencesKeys.SHORT_BREAK_DURATION
 import com.enriqueajin.pomidorki.utils.getSetting
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -28,9 +27,11 @@ class CountDownPomodoro
         private val context: Context,
         private val userSettingsRepository: UserSettingsRepository,
     ) {
-        private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+        private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
-        private var countDownTimer: CountDownTimer? = null
+        private var tickJob: Job? = null
+        private var deadlineElapsed: Long = 0L
+        private var isRunning = false
 
         private val selectedTimer = MutableStateFlow(0)
         private val durationSettings = MutableStateFlow(UserSettingsState())
@@ -38,9 +39,6 @@ class CountDownPomodoro
         val initialMillis = _initialMillis.asStateFlow()
         private val _timeLeft: MutableStateFlow<Long> = MutableStateFlow(updateInitialMillis(selectedTimer.value))
         val timeLeft = _timeLeft.asStateFlow()
-
-        private var isActive by mutableStateOf(false)
-        private val countDownInterval = 1_000L
 
         init {
             observeDurationSettings()
@@ -58,41 +56,50 @@ class CountDownPomodoro
                             shortBreakDuration = shortBreak,
                             longBreakDuration = longBreak,
                         )
-                    _timeLeft.value = updateInitialMillis(selectedTimer.value)
+                    updateInitialMillis(selectedTimer.value)
+                    if (!isRunning) {
+                        _timeLeft.value = _initialMillis.value
+                    }
                 }
             }
         }
 
         fun start() {
-            isActive = true
-            countDownTimer =
-                object : CountDownTimer(timeLeft.value, countDownInterval) {
-                    override fun onTick(millisUntilFinished: Long) {
-                        _timeLeft.value = millisUntilFinished
-                    }
-
-                    override fun onFinish() {
-                        _timeLeft.value = 0L
-                        ServiceHelper.triggerForegroundService(context, ACTION_SERVICE_IDLE)
-
-                        // Delay to make sure that timeLeft = 0 first, and then reset to initialMillis
-                        scope.launch {
+            tickJob?.cancel()
+            isRunning = true
+            deadlineElapsed = SystemClock.elapsedRealtime() + _timeLeft.value
+            tickJob =
+                scope.launch {
+                    while (isActive) {
+                        val left = (deadlineElapsed - SystemClock.elapsedRealtime()).coerceAtLeast(0L)
+                        _timeLeft.value = left
+                        if (left == 0L) {
+                            ServiceHelper.triggerForegroundService(context, ACTION_SERVICE_IDLE)
+                            // Emit 0 first, then restore initial duration for next start
                             delay(100L)
                             _timeLeft.value = _initialMillis.value
-                            isActive = false
+                            isRunning = false
+                            break
                         }
+                        delay(((left - 1) % 1_000L) + 1L)
                     }
-                }.start()
+                }
         }
 
         fun pause() {
-            isActive = false
-            countDownTimer?.cancel()
+            isRunning = false
+            tickJob?.cancel()
+            tickJob = null
+            if (deadlineElapsed > 0L) {
+                _timeLeft.value = (deadlineElapsed - SystemClock.elapsedRealtime()).coerceAtLeast(0L)
+            }
         }
 
         fun reset() {
-            isActive = false
-            countDownTimer?.cancel()
+            isRunning = false
+            tickJob?.cancel()
+            tickJob = null
+            deadlineElapsed = 0L
             _timeLeft.value = _initialMillis.value
         }
 
