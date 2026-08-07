@@ -30,7 +30,6 @@ class CountDownPomodoro
         private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
         private var tickJob: Job? = null
-        private var deadlineElapsed: Long = 0L
         private var isRunning = false
 
         private val selectedTimer = MutableStateFlow(0)
@@ -39,6 +38,8 @@ class CountDownPomodoro
         val initialMillis = _initialMillis.asStateFlow()
         private val _timeLeft: MutableStateFlow<Long> = MutableStateFlow(updateInitialMillis(selectedTimer.value))
         val timeLeft = _timeLeft.asStateFlow()
+        private val _deadlineElapsed: MutableStateFlow<Long> = MutableStateFlow(0L)
+        val deadlineElapsed = _deadlineElapsed.asStateFlow()
 
         init {
             observeDurationSettings()
@@ -67,13 +68,15 @@ class CountDownPomodoro
         fun start() {
             tickJob?.cancel()
             isRunning = true
-            deadlineElapsed = SystemClock.elapsedRealtime() + _timeLeft.value
+            val deadline = SystemClock.elapsedRealtime() + _timeLeft.value
+            _deadlineElapsed.value = deadline
             tickJob =
                 scope.launch {
                     while (isActive) {
-                        val left = (deadlineElapsed - SystemClock.elapsedRealtime()).coerceAtLeast(0L)
+                        val left = (deadline - SystemClock.elapsedRealtime()).coerceAtLeast(0L)
                         _timeLeft.value = left
                         if (left == 0L) {
+                            _deadlineElapsed.value = 0L
                             ServiceHelper.triggerForegroundService(context, ACTION_SERVICE_IDLE)
                             // Emit 0 first, then restore initial duration for next start
                             delay(100L)
@@ -90,16 +93,18 @@ class CountDownPomodoro
             isRunning = false
             tickJob?.cancel()
             tickJob = null
-            if (deadlineElapsed > 0L) {
-                _timeLeft.value = (deadlineElapsed - SystemClock.elapsedRealtime()).coerceAtLeast(0L)
+            val deadline = _deadlineElapsed.value
+            if (deadline > 0L) {
+                _timeLeft.value = (deadline - SystemClock.elapsedRealtime()).coerceAtLeast(0L)
             }
+            _deadlineElapsed.value = 0L
         }
 
         fun reset() {
             isRunning = false
             tickJob?.cancel()
             tickJob = null
-            deadlineElapsed = 0L
+            _deadlineElapsed.value = 0L
             _timeLeft.value = _initialMillis.value
         }
 
@@ -117,6 +122,7 @@ class CountDownPomodoro
 
         fun updateSelectedTimer(selectedTimer: Int) {
             this.selectedTimer.value = selectedTimer
+            _deadlineElapsed.value = 0L
             _timeLeft.value = updateInitialMillis(selectedTimer)
         }
     }

@@ -332,7 +332,14 @@ fun TimerScreen(
                     ) {
                         TimerProgressIndicator(
                             modifier = Modifier.size(TimerProgressIndicatorDefaults.Size),
-                            progress = uiState.timerProgress,
+                            totalMillis = uiState.initialMillis,
+                            remainingMillis = uiState.timeLeft,
+                            endsAtElapsedRealtime =
+                                if (uiState.currentState == CountdownState.Started) {
+                                    uiState.deadlineElapsed
+                                } else {
+                                    0L
+                                },
                             timerText = uiState.timerText,
                             indicatorColor = timerArcColor,
                             trackColor = timeElapsedArcColor,

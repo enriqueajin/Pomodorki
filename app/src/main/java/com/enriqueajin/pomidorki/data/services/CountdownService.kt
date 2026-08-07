@@ -85,6 +85,11 @@ class CountdownService : Service() {
                     }
                 }
                 launch {
+                    countdownTimer.deadlineElapsed.collect { deadlineElapsed ->
+                        updateServiceData(deadlineElapsed = deadlineElapsed)
+                    }
+                }
+                launch {
                     countdownTimer.timeLeft.collect { timeLeft ->
                         if (timeLeft > 0L) {
                             updateServiceData(timeLeft = timeLeft)
@@ -166,6 +171,7 @@ class CountdownService : Service() {
         timeLeft: Long? = null,
         initialMillis: Long? = null,
         selectedTimer: Int? = null,
+        deadlineElapsed: Long? = null,
     ) {
         _serviceData.update {
             it.copy(
@@ -173,6 +179,7 @@ class CountdownService : Service() {
                 timeLeft = timeLeft ?: it.timeLeft,
                 initialMillis = initialMillis ?: it.initialMillis,
                 selectedTimer = selectedTimer ?: it.selectedTimer,
+                deadlineElapsed = deadlineElapsed ?: it.deadlineElapsed,
             )
         }
     }

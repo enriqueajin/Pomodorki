@@ -65,11 +65,7 @@ class TimerScreenViewModel
                     timeLeft = data.timeLeft,
                     initialMillis = data.initialMillis,
                     selectedTimer = data.selectedTimer,
-                    timerProgress =
-                        timerUiMapper.formatProgress(
-                            timeLeftMillis = data.timeLeft,
-                            initialMillis = data.initialMillis,
-                        ),
+                    deadlineElapsed = data.deadlineElapsed,
                     timerText = timerUiMapper.formatTimerText(data.timeLeft),
                 )
             }
