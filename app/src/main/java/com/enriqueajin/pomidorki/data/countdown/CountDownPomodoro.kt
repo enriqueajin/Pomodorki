@@ -33,6 +33,7 @@ class CountDownPomodoro
 
         private var tickJob: Job? = null
         private var isRunning = false
+        private var sessionActive = false
 
         private val selectedTimer = MutableStateFlow(0)
         private val durationSettings = MutableStateFlow(UserSettingsState())
@@ -59,9 +60,8 @@ class CountDownPomodoro
                             shortBreakDuration = shortBreak,
                             longBreakDuration = longBreak,
                         )
-                    updateInitialMillis(selectedTimer.value)
-                    if (!isRunning) {
-                        _timeLeft.value = _initialMillis.value
+                    if (!sessionActive) {
+                        applyDurationSettingsToTimer()
                     }
                 }
             }
@@ -70,6 +70,7 @@ class CountDownPomodoro
         fun start() {
             tickJob?.cancel()
             isRunning = true
+            sessionActive = true
             val initialRemaining = _timeLeft.value
             val deadline = SystemClock.elapsedRealtime() + _timeLeft.value
             _deadlineElapsed.value = deadline
@@ -102,8 +103,9 @@ class CountDownPomodoro
                         ServiceHelper.triggerForegroundService(context, ACTION_SERVICE_IDLE)
                         // Emit 0 first, then restore initial duration for next start
                         delay(100L)
-                        _timeLeft.value = _initialMillis.value
                         isRunning = false
+                        sessionActive = false
+                        applyDurationSettingsToTimer()
                     }
                 }
         }
@@ -121,10 +123,15 @@ class CountDownPomodoro
 
         fun reset() {
             isRunning = false
+            sessionActive = false
             tickJob?.cancel()
             tickJob = null
             _deadlineElapsed.value = 0L
-            _timeLeft.value = _initialMillis.value
+            applyDurationSettingsToTimer()
+        }
+
+        private fun applyDurationSettingsToTimer() {
+            _timeLeft.value = updateInitialMillis(selectedTimer.value)
         }
 
         private fun updateInitialMillis(timerIndex: Int): Long {
@@ -141,7 +148,11 @@ class CountDownPomodoro
 
         fun updateSelectedTimer(selectedTimer: Int) {
             this.selectedTimer.value = selectedTimer
+            sessionActive = false
+            isRunning = false
+            tickJob?.cancel()
+            tickJob = null
             _deadlineElapsed.value = 0L
-            _timeLeft.value = updateInitialMillis(selectedTimer)
+            applyDurationSettingsToTimer()
         }
     }
