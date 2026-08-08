@@ -32,7 +32,6 @@ object Constants {
         )
 
     val pomodoroTabItems = listOf("Pomodoro", "Short Break", "Long Break")
-    val screensWithTopBar = arrayOf(Route.Timer.route, Route.Settings.route)
     val screensWithBottomBar =
         arrayOf(
             Route.Timer.route,
