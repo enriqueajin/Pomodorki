@@ -7,4 +7,5 @@ data class PomodoroServiceData(
     val timeLeft: Long = 0L,
     val initialMillis: Long = 0L,
     val selectedTimer: Int = 0,
+    val deadlineElapsed: Long = 0L,
 )

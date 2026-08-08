@@ -11,10 +11,11 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -58,6 +59,7 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.min
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
@@ -116,7 +118,7 @@ fun TimerScreenRoot(
                 is Effect.TriggerIntent -> {
                     val intent =
                         Intent(context, CountdownService::class.java).apply {
-                            putExtra(ACTION_TIMER_TYPE, uiState.selectedTimer)
+                            putExtra(ACTION_TIMER_TYPE, effect.tabIndex)
                         }
                     context.startService(intent)
                 }
@@ -126,6 +128,7 @@ fun TimerScreenRoot(
                     ServiceHelper.triggerForegroundService(
                         context = context,
                         action = effect.action,
+                        timerType = effect.timerType,
                     )
                 }
             }
@@ -258,6 +261,7 @@ fun TimerScreen(
         }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         containerColor = MaterialTheme.colorScheme.background,
     ) { innerPadding ->
         Box(modifier = Modifier.fillMaxSize()) {
@@ -274,7 +278,6 @@ fun TimerScreen(
                     Modifier
                         .fillMaxSize()
                         .padding(innerPadding),
-                verticalArrangement = Arrangement.SpaceBetween,
             ) {
                 Column {
                     IconButton(
@@ -306,39 +309,53 @@ fun TimerScreen(
                         onTabSelected = { event(TimerScreenContract.Event.OnTabClicked(it)) },
                     )
                 }
-                Column(
+                BoxWithConstraints(
                     modifier =
                         Modifier
-                            .fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
+                            .fillMaxWidth()
+                            .weight(1f),
+                    contentAlignment = Alignment.Center,
                 ) {
-                    Image(
-                        modifier =
-                            Modifier
-                                .width(150.dp)
-                                .height(66.dp),
-                        painter = painterResource(id = R.drawable.tomato_stalk),
-                        contentDescription = null,
-                    )
-                    Box(
-                        modifier =
-                            Modifier
-                                .background(
-                                    color = MaterialTheme.colorScheme.background,
-                                    shape = RoundedCornerShape(999.dp),
-                                ).padding(16.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        TimerProgressIndicator(
-                            modifier = Modifier.size(TimerProgressIndicatorDefaults.Size),
-                            progress = uiState.timerProgress,
-                            timerText = uiState.timerText,
-                            indicatorColor = timerArcColor,
-                            trackColor = timeElapsedArcColor,
-                            textColor = timerTextColor,
+                    val stalkHeight = 66.dp
+                    val indicatorPadding = 32.dp
+                    val availableForIndicator = (maxHeight - stalkHeight - indicatorPadding).coerceAtLeast(120.dp)
+                    val indicatorSize =
+                        min(TimerProgressIndicatorDefaults.Size, min(maxWidth - 32.dp, availableForIndicator))
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Image(
+                            modifier =
+                                Modifier
+                                    .width(150.dp)
+                                    .height(stalkHeight),
+                            painter = painterResource(id = R.drawable.tomato_stalk),
+                            contentDescription = null,
                         )
+                        Box(
+                            modifier =
+                                Modifier
+                                    .background(
+                                        color = MaterialTheme.colorScheme.background,
+                                        shape = RoundedCornerShape(999.dp),
+                                    ).padding(16.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            TimerProgressIndicator(
+                                modifier = Modifier.size(indicatorSize),
+                                totalMillis = uiState.initialMillis,
+                                remainingMillis = uiState.timeLeft,
+                                endsAtElapsedRealtime =
+                                    if (uiState.currentState == CountdownState.Started) {
+                                        uiState.deadlineElapsed
+                                    } else {
+                                        0L
+                                    },
+                                timerText = uiState.timerText,
+                                indicatorColor = timerArcColor,
+                                trackColor = timeElapsedArcColor,
+                                textColor = timerTextColor,
+                            )
+                        }
                     }
-                    Spacer(modifier = Modifier.height(35.dp))
                 }
                 Column(
                     modifier =
@@ -389,7 +406,7 @@ fun TimerScreen(
                                 disabledTextColor = MaterialTheme.colorScheme.onSurface,
                             ),
                     )
-                    Spacer(modifier = Modifier.height(30.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
                     ConstraintLayout(modifier = Modifier.fillMaxWidth()) {
                         val (mainButton, resetIcon) = createRefs()
 
@@ -447,7 +464,7 @@ fun TimerScreen(
                             }
                         }
                     }
-                    Spacer(modifier = Modifier.height(30.dp)) // This spacer might push content too low if nav bar is opaque
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
             }
             dialogQueue

@@ -36,7 +36,7 @@ class TimerScreenViewModel
         private val _uiState = MutableStateFlow(State())
         val uiState = _uiState.asStateFlow()
 
-        private val _uiEffects = Channel<Effect>()
+        private val _uiEffects = Channel<Effect>(Channel.BUFFERED)
         val uiEffects = _uiEffects.receiveAsFlow()
 
         private var serviceDataJob: Job? = null
@@ -65,11 +65,7 @@ class TimerScreenViewModel
                     timeLeft = data.timeLeft,
                     initialMillis = data.initialMillis,
                     selectedTimer = data.selectedTimer,
-                    timerProgress =
-                        timerUiMapper.formatProgress(
-                            timeLeftMillis = data.timeLeft,
-                            initialMillis = data.initialMillis,
-                        ),
+                    deadlineElapsed = data.deadlineElapsed,
                     timerText = timerUiMapper.formatTimerText(data.timeLeft),
                 )
             }
@@ -96,8 +92,14 @@ class TimerScreenViewModel
 
         private fun handleOnAlertConfirmClick(newTabIndex: Int) {
             _uiState.updateState { it.copy(selectedTimer = newTabIndex, isDialogOpen = false) }
+            updateDataStore(newTabIndex)
             val action = if (_uiState.value.hasTimerStarted()) ACTION_SERVICE_CLOSE else ACTION_SERVICE_RESET
-            _uiEffects.trySend(Effect.TriggerForegroundService(action))
+            _uiEffects.trySend(
+                Effect.TriggerForegroundService(
+                    action = action,
+                    timerType = newTabIndex,
+                ),
+            )
         }
 
         private fun handleTabClick(index: Int) {

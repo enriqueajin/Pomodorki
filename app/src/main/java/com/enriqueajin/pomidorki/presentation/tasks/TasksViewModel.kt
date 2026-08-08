@@ -17,7 +17,8 @@ import javax.inject.Inject
 class TasksViewModel
     @Inject
     constructor() : ViewModel() {
-        private val tasksFlow = flowOf(getTasks())
+        private val initialTasks = getTasks()
+        private val tasksFlow = flowOf(initialTasks)
 
         private val filters = MutableStateFlow(TasksFilters())
 
@@ -26,29 +27,34 @@ class TasksViewModel
                 tasksFlow.distinctUntilChanged(),
                 filters,
             ) { tasks, myFilters ->
-
-                val filteredTasks = applyFilters(tasks, myFilters)
-
-                val groupedTasks =
-                    myFilters.currentGrouping?.let { grouping ->
-                        when (grouping) {
-                            Grouping.Category -> filteredTasks.groupBy { it.category.name }
-                            Grouping.Priority -> filteredTasks.groupBy { it.priority.name }
-                        }
-                    }
-
-                TasksScreenState(
-                    isDropdownExpanded = myFilters.isDropdownExpanded,
-                    selectedStatus = myFilters.selectedStatus,
-                    tasks = filteredTasks,
-                    groupedTasks = groupedTasks,
-                    loading = false,
-                )
+                createUiState(tasks, myFilters)
             }.stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5000L),
-                initialValue = TasksScreenState(loading = true),
+                initialValue = createUiState(initialTasks, filters.value),
             )
+
+        private fun createUiState(
+            tasks: List<Task>,
+            filters: TasksFilters,
+        ): TasksScreenState {
+            val filteredTasks = applyFilters(tasks, filters)
+            val groupedTasks =
+                filters.currentGrouping?.let { grouping ->
+                    when (grouping) {
+                        Grouping.Category -> filteredTasks.groupBy { it.category.name }
+                        Grouping.Priority -> filteredTasks.groupBy { it.priority.name }
+                    }
+                }
+
+            return TasksScreenState(
+                isDropdownExpanded = filters.isDropdownExpanded,
+                selectedStatus = filters.selectedStatus,
+                tasks = filteredTasks,
+                groupedTasks = groupedTasks,
+                loading = false,
+            )
+        }
 
         fun onEvent(event: TasksScreenEvent) {
             when (event) {

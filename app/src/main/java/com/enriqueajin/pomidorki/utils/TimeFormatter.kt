@@ -11,4 +11,11 @@ object TimeFormatter {
             TimeUnit.MILLISECONDS.toMinutes(this),
             TimeUnit.MILLISECONDS.toSeconds(this) % 60,
         )
+
+    fun Long.formatCountdownTime(): String =
+        String.format(
+            FORMAT,
+            TimeUnit.MILLISECONDS.toMinutes(this + 999L),
+            TimeUnit.MILLISECONDS.toSeconds(this + 999L) % 60,
+        )
 }

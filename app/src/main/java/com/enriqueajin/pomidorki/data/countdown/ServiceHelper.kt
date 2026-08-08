@@ -7,6 +7,7 @@ import android.os.Build
 import com.enriqueajin.pomidorki.data.services.CountdownService
 import com.enriqueajin.pomidorki.data.services.CountdownState
 import com.enriqueajin.pomidorki.presentation.MainActivity
+import com.enriqueajin.pomidorki.utils.Constants.ACTION_TIMER_TYPE
 import com.enriqueajin.pomidorki.utils.Constants.CANCEL_REQUEST_CODE
 import com.enriqueajin.pomidorki.utils.Constants.CLICK_REQUEST_CODE
 import com.enriqueajin.pomidorki.utils.Constants.COUNTDOWN_STATE
@@ -104,9 +105,13 @@ object ServiceHelper {
     fun triggerForegroundService(
         context: Context,
         action: String,
+        timerType: Int? = null,
     ) {
         Intent(context, CountdownService::class.java).apply {
             this.action = action
+            if (timerType != null) {
+                putExtra(ACTION_TIMER_TYPE, timerType)
+            }
             context.startService(this)
         }
     }

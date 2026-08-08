@@ -8,7 +8,6 @@ import androidx.compose.ui.unit.dp
 internal object TimerProgressIndicatorTokens {
     val IndicatorSize = 300.dp
     val StrokeWidth = 20.dp
-    const val ANIMATION_DURATION_MILLIS = 500
 
     @Composable
     fun indicatorColor(): Color = MaterialTheme.colorScheme.primary

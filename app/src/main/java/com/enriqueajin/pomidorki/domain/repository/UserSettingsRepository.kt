@@ -1,6 +1,7 @@
 package com.enriqueajin.pomidorki.domain.repository
 
 import androidx.datastore.preferences.core.Preferences
+import com.enriqueajin.pomidorki.domain.model.TimerSessionSnapshot
 import kotlinx.coroutines.flow.Flow
 
 interface UserSettingsRepository {
@@ -19,4 +20,15 @@ interface UserSettingsRepository {
         key: String,
         value: Int,
     )
+
+    suspend fun saveLong(
+        key: String,
+        value: Long,
+    )
+
+    suspend fun saveTimerSession(session: TimerSessionSnapshot)
+
+    suspend fun clearTimerSession()
+
+    suspend fun getTimerSession(): TimerSessionSnapshot
 }

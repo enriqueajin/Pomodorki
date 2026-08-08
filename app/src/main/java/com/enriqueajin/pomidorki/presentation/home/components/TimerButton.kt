@@ -1,9 +1,9 @@
 package com.enriqueajin.pomidorki.presentation.home.components
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
@@ -37,8 +37,9 @@ fun TimerButton(
         modifier =
             modifier
                 .width(160.dp)
-                .height(45.dp),
+                .heightIn(min = 48.dp),
         onClick = onClick,
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
         colors =
             ButtonDefaults.buttonColors(
                 containerColor = containerColor,
@@ -46,16 +47,11 @@ fun TimerButton(
             ),
     ) {
         Row(
-            modifier =
-                modifier
-                    .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
+            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
-                modifier =
-                    modifier
-                        .size(35.dp),
+                modifier = Modifier.size(24.dp),
                 imageVector = icon,
                 contentDescription = null,
             )

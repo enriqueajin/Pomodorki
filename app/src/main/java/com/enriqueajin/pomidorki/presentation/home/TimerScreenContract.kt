@@ -8,7 +8,7 @@ sealed interface TimerScreenContract {
         val timeLeft: Long = 0L,
         val initialMillis: Long = 0L,
         val selectedTimer: Int = 0,
-        val timerProgress: Float = 0f,
+        val deadlineElapsed: Long = 0L,
         val timerText: String = "00:00",
         val isDialogOpen: Boolean = false,
     )
@@ -38,6 +38,7 @@ sealed interface TimerScreenContract {
 
         data class TriggerForegroundService(
             val action: String,
+            val timerType: Int,
         ) : Effect()
     }
 }
