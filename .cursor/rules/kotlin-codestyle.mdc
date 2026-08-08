@@ -1,0 +1,103 @@
+---
+description: Idiomatic Kotlin code style for this project
+globs: "**/*.{kt,kts}"
+alwaysApply: false
+---
+
+# Kotlin code style
+
+Prefer idiomatic Kotlin. Keep `if` for simple boolean conditions; do not use `if (x != null)` when a scope/std function reads clearer.
+
+## Null handling and scope functions
+
+Prefer `?.let`, safe calls, and Elvis over null `if` checks.
+
+```kotlin
+// ❌
+if (user != null) {
+    save(user)
+}
+
+// ✅
+user?.let { save(it) }
+// ✅ when the lambda only forwards the argument
+user?.let(::save)
+```
+
+Prefer callable references (`::`) when a scope function or higher-order call only passes the value through:
+
+```kotlin
+// ❌
+index?.let { addIndex(it) }
+
+// ✅
+index?.let(::addIndex)
+```
+
+Same idea for `map`, `forEach`, `filter`, etc. when the lambda is a single call with the same parameter.
+
+`takeIf` / `takeUnless` alone in a chain often look odd. Prefer them when they sit in a longer pipeline:
+
+```kotlin
+// ❌ awkward as the only step
+val x = value.takeIf { it.isValid() }
+
+// ✅ natural in a chain
+something
+    .takeIf { it.isReady }
+    ?.let { transform(it) }
+    ?.map { it.id }
+```
+
+Use plain `if` for non-null boolean logic (`if (isEnabled)`, `if (count > 0)`).
+
+## Expression bodies
+
+Prefer single-expression functions and omit the explicit return type when the compiler can infer it cleanly:
+
+```kotlin
+// ❌
+fun label(count: Int): String {
+    return "$count items"
+}
+
+// ✅
+fun label(count: Int) = "$count items"
+```
+
+Use a block body when the body needs multiple statements, early returns, or a type that should stay explicit for readability/API clarity.
+
+## Naming: no conditional clauses in names
+
+Name functions for **what they do**, not for the guard or circumstance. Conditions belong in the body (or call site), not in the identifier.
+
+Avoid suffixes/infixes like `IfNeeded`, `IfPossible`, `WhenReady`, `UnlessEmpty`, and similar:
+
+```kotlin
+// ❌
+fun handleRequestsIfNeeded() { ... }
+
+// ✅
+fun handleRequests() { ... }
+```
+
+The caller and the implementation already decide *whether* to run; the name should stay a clear verb phrase of the action.
+
+## No local functions
+
+Never declare a function inside another function. If a helper is only used by one function, make it a `private` member (or file-level `private`) and call it:
+
+```kotlin
+// ❌
+fun process(items: List<Item>) {
+    fun format(item: Item) = item.name.uppercase()
+    items.forEach { println(format(it)) }
+}
+
+// ✅
+fun process(items: List<Item>) {
+    items.forEach { println(format(it)) }
+}
+
+private fun format(item: Item) = item.name.uppercase()
+```
