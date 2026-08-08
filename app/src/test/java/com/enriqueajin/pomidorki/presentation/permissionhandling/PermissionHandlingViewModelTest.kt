@@ -28,9 +28,10 @@ class PermissionHandlingViewModelTest {
 
     @Test
     fun `GIVEN same permission already queued WHEN onPermissionResult denied THEN does not duplicate`() {
-        val viewModel = PermissionHandlingViewModel().apply {
-            onPermissionResult(Permissions.CALL_PHONE, isGranted = false)
-        }
+        val viewModel =
+            PermissionHandlingViewModel().apply {
+                onPermissionResult(Permissions.CALL_PHONE, isGranted = false)
+            }
 
         viewModel.onPermissionResult(Permissions.CALL_PHONE, isGranted = false)
 
@@ -42,10 +43,11 @@ class PermissionHandlingViewModelTest {
 
     @Test
     fun `GIVEN queued permissions WHEN dismissDialog THEN removes first (FIFO)`() {
-        val viewModel = PermissionHandlingViewModel().apply {
-            onPermissionResult(Permissions.RECORD_AUDIO, isGranted = false)
-            onPermissionResult(Permissions.CAMERA, isGranted = false)
-        }
+        val viewModel =
+            PermissionHandlingViewModel().apply {
+                onPermissionResult(Permissions.RECORD_AUDIO, isGranted = false)
+                onPermissionResult(Permissions.CAMERA, isGranted = false)
+            }
 
         viewModel.dismissDialog()
 
