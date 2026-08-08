@@ -63,10 +63,12 @@ private const val LONG_BREAK = "Long Break"
 fun PomodoroSettingsScreenRoot(userSettingsViewModel: UserSettingsViewModel = hiltViewModel()) {
     val userSettingsState by userSettingsViewModel.userSettingsState.collectAsStateWithLifecycle()
 
-    PomodoroSettingsScreen(
-        userSettingsState = userSettingsState,
-        onUserSettingsEvent = userSettingsViewModel::onUserSettingsEvent,
-    )
+    userSettingsState?.let { state ->
+        PomodoroSettingsScreen(
+            userSettingsState = state,
+            onUserSettingsEvent = userSettingsViewModel::onUserSettingsEvent,
+        )
+    }
 }
 
 @Composable
