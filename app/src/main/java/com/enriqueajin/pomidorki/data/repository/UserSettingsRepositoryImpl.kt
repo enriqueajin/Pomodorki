@@ -8,7 +8,14 @@ import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import com.enriqueajin.pomidorki.domain.model.TimerSessionSnapshot
 import com.enriqueajin.pomidorki.domain.repository.UserSettingsRepository
+import com.enriqueajin.pomidorki.utils.PreferencesKeys.SELECTED_TIMER
+import com.enriqueajin.pomidorki.utils.PreferencesKeys.SESSION_DEADLINE_ELAPSED
+import com.enriqueajin.pomidorki.utils.PreferencesKeys.SESSION_INITIAL_MILLIS
+import com.enriqueajin.pomidorki.utils.PreferencesKeys.SESSION_STATE
+import com.enriqueajin.pomidorki.utils.PreferencesKeys.SESSION_TIME_LEFT
+import com.enriqueajin.pomidorki.utils.PreferencesKeys.SessionState
 import com.enriqueajin.pomidorki.utils.getDefaultPreference
 import com.enriqueajin.pomidorki.utils.safeInvoke
 import kotlinx.coroutines.flow.Flow
@@ -69,6 +76,52 @@ class UserSettingsRepositoryImpl
                     preferences[preferencesKey] = value
                 }
             }
+        }
+
+        override suspend fun saveLong(
+            key: String,
+            value: Long,
+        ) {
+            safeInvoke {
+                val preferencesKey = longPreferencesKey(key)
+                dataStore.edit { preferences ->
+                    preferences[preferencesKey] = value
+                }
+            }
+        }
+
+        override suspend fun saveTimerSession(session: TimerSessionSnapshot) {
+            safeInvoke {
+                dataStore.edit { preferences ->
+                    preferences[stringPreferencesKey(SESSION_STATE)] = session.state
+                    preferences[longPreferencesKey(SESSION_DEADLINE_ELAPSED)] = session.deadlineElapsed
+                    preferences[longPreferencesKey(SESSION_TIME_LEFT)] = session.timeLeft
+                    preferences[longPreferencesKey(SESSION_INITIAL_MILLIS)] = session.initialMillis
+                    preferences[intPreferencesKey(SELECTED_TIMER)] = session.selectedTimer
+                }
+            }
+        }
+
+        override suspend fun clearTimerSession() {
+            safeInvoke {
+                dataStore.edit { preferences ->
+                    preferences[stringPreferencesKey(SESSION_STATE)] = SessionState.IDLE
+                    preferences[longPreferencesKey(SESSION_DEADLINE_ELAPSED)] = 0L
+                    preferences[longPreferencesKey(SESSION_TIME_LEFT)] = 0L
+                    preferences[longPreferencesKey(SESSION_INITIAL_MILLIS)] = 0L
+                }
+            }
+        }
+
+        override suspend fun getTimerSession(): TimerSessionSnapshot {
+            val preferences = dataStore.data.first()
+            return TimerSessionSnapshot(
+                state = preferences[stringPreferencesKey(SESSION_STATE)] ?: SessionState.IDLE,
+                deadlineElapsed = preferences[longPreferencesKey(SESSION_DEADLINE_ELAPSED)] ?: 0L,
+                timeLeft = preferences[longPreferencesKey(SESSION_TIME_LEFT)] ?: 0L,
+                initialMillis = preferences[longPreferencesKey(SESSION_INITIAL_MILLIS)] ?: 0L,
+                selectedTimer = preferences[intPreferencesKey(SELECTED_TIMER)] ?: 0,
+            )
         }
 
         inline fun <reified T> getPreferencesKey(key: String): Preferences.Key<T> =

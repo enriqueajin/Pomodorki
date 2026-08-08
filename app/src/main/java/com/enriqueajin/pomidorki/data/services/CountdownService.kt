@@ -13,6 +13,7 @@ import androidx.core.app.NotificationCompat
 import com.enriqueajin.pomidorki.R
 import com.enriqueajin.pomidorki.data.countdown.CountDownPomodoro
 import com.enriqueajin.pomidorki.data.countdown.ServiceHelper
+import com.enriqueajin.pomidorki.data.countdown.SessionRestoreResult
 import com.enriqueajin.pomidorki.data.model.PomodoroServiceData
 import com.enriqueajin.pomidorki.domain.repository.UserSettingsRepository
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_CLOSE
@@ -71,7 +72,42 @@ class CountdownService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        observeTimeLeft()
+        serviceScope.launch {
+            restoreSessionIfNeeded()
+            observeTimeLeft()
+        }
+    }
+
+    private suspend fun restoreSessionIfNeeded() {
+        when (countdownTimer.restoreSession()) {
+            SessionRestoreResult.Started -> {
+                updateServiceData(
+                    currentState = CountdownState.Started,
+                    timeLeft = countdownTimer.timeLeft.value,
+                    initialMillis = countdownTimer.initialMillis.value,
+                    deadlineElapsed = countdownTimer.deadlineElapsed.value,
+                    selectedTimer = countdownTimer.selectedTimer.value,
+                )
+                startForegroundService()
+                setStartedActions()
+                updateNotification(countdownTimer.timeLeft.value)
+            }
+            SessionRestoreResult.Paused -> {
+                updateServiceData(
+                    currentState = CountdownState.Paused,
+                    timeLeft = countdownTimer.timeLeft.value,
+                    initialMillis = countdownTimer.initialMillis.value,
+                    deadlineElapsed = 0L,
+                    selectedTimer = countdownTimer.selectedTimer.value,
+                )
+            }
+            SessionRestoreResult.CompletedWhileAway -> {
+                updateServiceData(currentState = CountdownState.Idle)
+                createNotificationChannels()
+                notifyTimerOver()
+            }
+            SessionRestoreResult.Idle -> Unit
+        }
     }
 
     private fun observeTimeLeft() {
@@ -93,7 +129,9 @@ class CountdownService : Service() {
                     countdownTimer.timeLeft.collect { timeLeft ->
                         if (timeLeft > 0L) {
                             updateServiceData(timeLeft = timeLeft)
-                            updateNotification(timeLeft)
+                            if (_serviceData.value.currentState == CountdownState.Started) {
+                                updateNotification(timeLeft)
+                            }
                         } else if (_serviceData.value.currentState == CountdownState.Started) {
                             updateServiceData(timeLeft = 0L, currentState = CountdownState.Idle)
                             notificationManager.cancel(NOTIFICATION_TICK_ID)
