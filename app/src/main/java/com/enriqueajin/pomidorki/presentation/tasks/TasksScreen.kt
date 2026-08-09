@@ -29,8 +29,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.enriqueajin.pomidorki.domain.model.Status
 import com.enriqueajin.pomidorki.domain.model.Task
+import com.enriqueajin.pomidorki.presentation.tasks.TasksScreenContract.Event
+import com.enriqueajin.pomidorki.presentation.tasks.TasksScreenContract.Grouping
+import com.enriqueajin.pomidorki.presentation.tasks.TasksScreenContract.Sorting
+import com.enriqueajin.pomidorki.presentation.tasks.TasksScreenContract.State
 import com.enriqueajin.pomidorki.presentation.tasks.components.ActionDropdownMenu
 import com.enriqueajin.pomidorki.presentation.tasks.components.StatusFilters
 import com.enriqueajin.pomidorki.presentation.tasks.components.TaskItem
@@ -48,11 +51,11 @@ fun TasksScreenRoot(tasksViewModel: TasksViewModel = hiltViewModel()) {
 @Composable
 private fun TasksScreen(
     modifier: Modifier = Modifier,
-    state: TasksScreenState,
-    event: (TasksScreenEvent) -> Unit,
+    state: State,
+    event: (Event) -> Unit,
 ) {
     when {
-        state.loading == true -> {
+        state.loading -> {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center,
@@ -85,8 +88,8 @@ private fun TasksScreen(
 @Composable
 fun SuccessScreen(
     modifier: Modifier = Modifier,
-    state: TasksScreenState,
-    event: (TasksScreenEvent) -> Unit,
+    state: State,
+    event: (Event) -> Unit,
 ) {
     Column(modifier = Modifier.padding(horizontal = 10.dp)) {
         Row(
@@ -95,8 +98,8 @@ fun SuccessScreen(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             StatusFilters(
-                selected = state.selectedStatus ?: Status.TODO.label,
-                onSelectedChange = { event(TasksScreenEvent.UpdateSelectedStatus(it)) },
+                selected = state.selectedStatus,
+                onSelectedChange = { event(Event.UpdateSelectedStatus(it)) },
                 onChipClick = { },
             )
             val sortingOptions = arrayOf("Sort by priority", "Sort by title", "Sort by category")
@@ -115,13 +118,13 @@ fun SuccessScreen(
                         isSortingMenuExpanded = false
                         when (item) {
                             "Sort by priority" -> {
-                                event(TasksScreenEvent.UpdateCurrentSorting(Sorting.Priority))
+                                event(Event.UpdateCurrentSorting(Sorting.Priority))
                             }
                             "Sort by title" -> {
-                                event(TasksScreenEvent.UpdateCurrentSorting(Sorting.Title))
+                                event(Event.UpdateCurrentSorting(Sorting.Title))
                             }
                             "Sort by category" -> {
-                                event(TasksScreenEvent.UpdateCurrentSorting(Sorting.Category))
+                                event(Event.UpdateCurrentSorting(Sorting.Category))
                             }
                         }
                     },
@@ -133,7 +136,7 @@ fun SuccessScreen(
                     icon = if (state.groupedTasks != null) Icons.Rounded.Clear else Icons.Rounded.Menu,
                     onExpandedChange = {
                         if (state.groupedTasks != null) {
-                            event(TasksScreenEvent.UpdateCurrentGrouping(null))
+                            event(Event.UpdateCurrentGrouping(null))
                         } else {
                             isGroupingMenuExpanded = it
                         }
@@ -143,10 +146,10 @@ fun SuccessScreen(
                         isGroupingMenuExpanded = false
                         when (item) {
                             "Group by category" -> {
-                                event(TasksScreenEvent.UpdateCurrentGrouping(Grouping.Category))
+                                event(Event.UpdateCurrentGrouping(Grouping.Category))
                             }
                             "Group by priority" -> {
-                                event(TasksScreenEvent.UpdateCurrentGrouping(Grouping.Priority))
+                                event(Event.UpdateCurrentGrouping(Grouping.Priority))
                             }
                         }
                     },
@@ -202,7 +205,7 @@ fun GroupedTasks(
 @Composable
 fun TasksScreenPreview() {
     TasksScreen(
-        state = TasksScreenState(tasks = getTasks()),
+        state = State(tasks = getTasks()),
         event = {},
     )
 }
