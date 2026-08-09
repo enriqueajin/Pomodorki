@@ -75,8 +75,10 @@ UI Event → ViewModel → Effect / Intent
 ### Stack (today)
 
 - Prefer JVM unit tests in `app/src/test` (ViewModels, mappers, utils). Mirror production packages.
-- Libraries in use: **JUnit4**, **MockK**, **Turbine** (`app.cash.turbine`), **kotlinx-coroutines-test** (`runTest`, virtual time).
-- Prefer **fakes** for repositories (`fake/FakeUserSettingsRepository.kt`); **MockK** for Android collaborators that are awkward to fake (e.g. `CountdownService`).
+- Libraries in use: **JUnit4**, **MockK**, **Turbine** (`app.cash.turbine`), **kotlinx-coroutines-test** (`runTest`, virtual time), **Robolectric** (medium data-layer tests that need Android APIs on the JVM).
+- `testOptions.unitTests.isIncludeAndroidResources = true` is required for Robolectric host tests in `:app`.
+- Prefer **fakes** for ViewModels (`fake/FakeUserSettingsRepository.kt`); **MockK** for Android collaborators that are awkward to fake (e.g. `CountdownService`).
+- For real repository / DataStore wiring, use Robolectric + a temp/in-memory DataStore (canonical: `data/repository/UserSettingsRepositoryImplTest.kt`), not the fake.
 - Use `MainDispatcherRule` / `Dispatchers.setMain` for Main-dependent code.
 - Compose UI tests live under `app/src/androidTest` (component-level today; expand later). They are **not** in CI yet.
 
@@ -120,6 +122,7 @@ Do not create a new mock/fake in every test by default if a shared setup works.
 | `testing-coroutines-with-runtest` | `runTest`, test dispatchers, virtual time |
 | `organizing-test-source-sets` | `test` vs `androidTest` placement |
 | `understanding-the-testing-pyramid` | Prefer many small JVM tests over big device suites |
+| `using-robolectric-correctly` | Host tests needing Android APIs (`Context`, DataStore file, `Log`, resources) |
 | `.agents/skills/kotlin-coroutines-skill/` | Coroutine correctness in production *and* tests |
 
 **Compose UI (when writing or expanding `androidTest`)**
@@ -134,7 +137,7 @@ Do not create a new mock/fake in every test by default if a shared setup works.
 | `clicking-and-scrolling` | Basic actions |
 | `synchronizing-with-idle` | `waitForIdle` / `waitUntil` |
 
-Do **not** default to Mockito, Espresso-Views, UiAutomator, FragmentScenario, Robolectric, or ADB device-ops skills unless the task explicitly needs them.
+Do **not** default to Mockito, Espresso-Views, UiAutomator, FragmentScenario, or ADB device-ops skills unless the task explicitly needs them. Prefer plain JVM tests + fakes; use **Robolectric** only when the class under test needs Android framework behavior (e.g. repository / DataStore tests).
 
 ## Guardrails
 
