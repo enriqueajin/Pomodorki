@@ -1,7 +1,6 @@
 package com.enriqueajin.pomidorki.data.countdown
 
 import android.content.Context
-import android.os.SystemClock
 import com.enriqueajin.pomidorki.domain.model.TimerSessionSnapshot
 import com.enriqueajin.pomidorki.domain.repository.UserSettingsRepository
 import com.enriqueajin.pomidorki.presentation.UserSettingsState
@@ -36,6 +35,7 @@ class CountDownPomodoro
     constructor(
         private val context: Context,
         private val userSettingsRepository: UserSettingsRepository,
+        private val elapsedRealtimeClock: ElapsedRealtimeClock,
         @Named("countdown") private val dispatcher: CoroutineDispatcher,
     ) {
         private val scope = CoroutineScope(SupervisorJob() + dispatcher)
@@ -87,7 +87,7 @@ class CountDownPomodoro
         }
 
         private suspend fun restoreStartedSession(session: TimerSessionSnapshot): SessionRestoreResult {
-            val remaining = session.deadlineElapsed - SystemClock.elapsedRealtime()
+            val remaining = session.deadlineElapsed - elapsedRealtimeClock.elapsedRealtime()
             if (remaining <= 0L) {
                 userSettingsRepository.clearTimerSession()
                 sessionActive = false
@@ -120,7 +120,7 @@ class CountDownPomodoro
             isRunning = true
             sessionActive = true
             val initialRemaining = _timeLeft.value
-            val deadline = SystemClock.elapsedRealtime() + _timeLeft.value
+            val deadline = elapsedRealtimeClock.elapsedRealtime() + _timeLeft.value
             _deadlineElapsed.value = deadline
             persistStartedSession(deadline)
             tickJob =
@@ -166,7 +166,7 @@ class CountDownPomodoro
             tickJob = null
             val deadline = _deadlineElapsed.value
             if (deadline > 0L) {
-                _timeLeft.value = (deadline - SystemClock.elapsedRealtime()).coerceAtLeast(0L)
+                _timeLeft.value = (deadline - elapsedRealtimeClock.elapsedRealtime()).coerceAtLeast(0L)
             }
             _deadlineElapsed.value = 0L
             persistPausedSession()
