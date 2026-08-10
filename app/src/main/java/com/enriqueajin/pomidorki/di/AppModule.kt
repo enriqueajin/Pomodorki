@@ -1,6 +1,8 @@
 package com.enriqueajin.pomidorki.di
 
 import android.content.Context
+import android.os.SystemClock
+import com.enriqueajin.pomidorki.data.countdown.ElapsedRealtimeClock
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -21,4 +23,7 @@ class AppModule {
     @Provides
     @Named("countdown")
     fun provideCountdownDispatcher(): CoroutineDispatcher = Dispatchers.Default
+
+    @Provides
+    fun provideElapsedRealtimeClock(): ElapsedRealtimeClock = ElapsedRealtimeClock { SystemClock.elapsedRealtime() }
 }
