@@ -115,7 +115,7 @@ private fun rememberTimerProgress(
     return progress
 }
 
-private fun progressRatio(
+internal fun progressRatio(
     remainingMillis: Long,
     totalMillis: Long,
 ): Float {
