@@ -1,28 +1,22 @@
 package com.enriqueajin.pomidorki.presentation.home
 
 import androidx.datastore.preferences.core.intPreferencesKey
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.enriqueajin.pomidorki.data.model.PomodoroServiceData
 import com.enriqueajin.pomidorki.data.services.CountdownService
 import com.enriqueajin.pomidorki.data.services.CountdownState.Paused
 import com.enriqueajin.pomidorki.data.services.CountdownState.Started
 import com.enriqueajin.pomidorki.domain.repository.UserSettingsRepository
+import com.enriqueajin.pomidorki.presentation.base.BaseViewModel
 import com.enriqueajin.pomidorki.presentation.home.TimerScreenContract.Effect
 import com.enriqueajin.pomidorki.presentation.home.TimerScreenContract.Event
+import com.enriqueajin.pomidorki.presentation.home.TimerScreenContract.InternalEvent
 import com.enriqueajin.pomidorki.presentation.home.TimerScreenContract.State
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_CLOSE
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_RESET
 import com.enriqueajin.pomidorki.utils.PreferencesKeys.SELECTED_TIMER
-import com.enriqueajin.pomidorki.utils.updateState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -32,24 +26,29 @@ class TimerScreenViewModel
     constructor(
         private val userSettingsRepository: UserSettingsRepository,
         private val timerUiMapper: TimerUiMapper,
-    ) : ViewModel() {
-        private val _uiState = MutableStateFlow(State())
-        val uiState = _uiState.asStateFlow()
-
-        private val _uiEffects = Channel<Effect>(Channel.BUFFERED)
-        val uiEffects = _uiEffects.receiveAsFlow()
-
+    ) : BaseViewModel<State, Event, InternalEvent, Effect>(State()) {
         private var serviceDataJob: Job? = null
 
         init {
             checkInitialSelectedTimer()
         }
 
+        override fun onEvent(event: Event) {
+            val previousSelectedTimer = uiState.value.selectedTimer
+            super.onEvent(event)
+            val nextSelectedTimer = uiState.value.selectedTimer
+            if (nextSelectedTimer != previousSelectedTimer) {
+                updateDataStore(nextSelectedTimer)
+            }
+        }
+
         fun onServiceConnected(service: CountdownService) {
             serviceDataJob?.cancel()
             serviceDataJob =
                 viewModelScope.launch {
-                    service.serviceData.collect(::updateStateServiceData)
+                    service.serviceData.collect { data ->
+                        dispatch(InternalEvent.ServiceDataUpdated(data))
+                    }
                 }
         }
 
@@ -58,43 +57,55 @@ class TimerScreenViewModel
             serviceDataJob = null
         }
 
-        private fun updateStateServiceData(data: PomodoroServiceData) {
-            _uiState.update {
-                it.copy(
-                    currentState = data.currentState,
-                    timeLeft = data.timeLeft,
-                    initialMillis = data.initialMillis,
-                    selectedTimer = data.selectedTimer,
-                    deadlineElapsed = data.deadlineElapsed,
-                    timerText = timerUiMapper.formatTimerText(data.timeLeft),
-                )
-            }
-        }
-
-        private fun checkInitialSelectedTimer() {
-            if (_uiState.value.hasTimerStarted()) {
-                viewModelScope.launch {
-                    val preferences = userSettingsRepository.userSettingsFlow.first()
-                    val key = intPreferencesKey(SELECTED_TIMER)
-                    val storedSelectedTimer = preferences[key] ?: 0
-                    _uiState.update { it.copy(selectedTimer = storedSelectedTimer) }
+        override fun handleUiEvent(event: Event) {
+            when (event) {
+                is Event.OnTabClicked -> handleTabClick(event.index)
+                is Event.OnAlertConfirmClick -> handleAlertConfirm(event.newTabIndex)
+                Event.OnAlertCancelClick -> setState { copy(isDialogOpen = false) }
+                Event.OnRestartIconClick -> {
+                    setState { copy(isDialogOpen = true) }
+                    emitEffect(Effect.TimerToBeConfirmed(uiState.value.selectedTimer))
                 }
             }
         }
 
-        fun onEvent(event: Event) =
+        override fun handleInternalEvent(event: InternalEvent) {
             when (event) {
-                is Event.OnAlertConfirmClick -> handleOnAlertConfirmClick(event.newTabIndex)
-                is Event.OnTabClicked -> handleTabClick(event.index)
-                Event.OnAlertCancelClick -> _uiState.updateState { it.copy(isDialogOpen = false) }
-                Event.OnRestartIconClick -> openDialog(_uiState.value.selectedTimer)
+                is InternalEvent.ServiceDataUpdated -> {
+                    val data = event.data
+                    setState {
+                        copy(
+                            currentState = data.currentState,
+                            timeLeft = data.timeLeft,
+                            initialMillis = data.initialMillis,
+                            selectedTimer = data.selectedTimer,
+                            deadlineElapsed = data.deadlineElapsed,
+                            timerText = timerUiMapper.formatTimerText(data.timeLeft),
+                        )
+                    }
+                }
+                is InternalEvent.RestoreSelectedTimer ->
+                    setState { copy(selectedTimer = event.index) }
             }
+        }
 
-        private fun handleOnAlertConfirmClick(newTabIndex: Int) {
-            _uiState.updateState { it.copy(selectedTimer = newTabIndex, isDialogOpen = false) }
-            updateDataStore(newTabIndex)
-            val action = if (_uiState.value.hasTimerStarted()) ACTION_SERVICE_CLOSE else ACTION_SERVICE_RESET
-            _uiEffects.trySend(
+        private fun handleTabClick(index: Int) {
+            val state = uiState.value
+            if (state.selectedTimer == index) return
+            if (state.hasTimerStarted()) {
+                setState { copy(isDialogOpen = true) }
+                emitEffect(Effect.TimerToBeConfirmed(index))
+            } else {
+                setState { copy(selectedTimer = index) }
+                emitEffect(Effect.TriggerIntent(index))
+            }
+        }
+
+        private fun handleAlertConfirm(newTabIndex: Int) {
+            val action =
+                if (uiState.value.hasTimerStarted()) ACTION_SERVICE_CLOSE else ACTION_SERVICE_RESET
+            setState { copy(selectedTimer = newTabIndex, isDialogOpen = false) }
+            emitEffect(
                 Effect.TriggerForegroundService(
                     action = action,
                     timerType = newTabIndex,
@@ -102,21 +113,15 @@ class TimerScreenViewModel
             )
         }
 
-        private fun handleTabClick(index: Int) {
-            val state = _uiState.value
-            if (state.selectedTimer == index) return
-            if (state.hasTimerStarted()) {
-                openDialog(index)
-            } else {
-                _uiState.updateState { it.copy(selectedTimer = index) }
-                updateDataStore(index)
-                _uiEffects.trySend(Effect.TriggerIntent(index))
+        private fun checkInitialSelectedTimer() {
+            if (uiState.value.hasTimerStarted()) {
+                viewModelScope.launch {
+                    val preferences = userSettingsRepository.userSettingsFlow.first()
+                    val key = intPreferencesKey(SELECTED_TIMER)
+                    val storedSelectedTimer = preferences[key] ?: 0
+                    dispatch(InternalEvent.RestoreSelectedTimer(storedSelectedTimer))
+                }
             }
-        }
-
-        private fun openDialog(tabToConfirmIndex: Int) {
-            _uiState.updateState { it.copy(isDialogOpen = true) }
-            _uiEffects.trySend(Effect.TimerToBeConfirmed(tabToConfirmIndex))
         }
 
         private fun updateDataStore(selectedTimer: Int) {

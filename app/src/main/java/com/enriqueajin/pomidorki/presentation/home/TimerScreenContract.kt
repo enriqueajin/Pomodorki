@@ -1,5 +1,6 @@
 package com.enriqueajin.pomidorki.presentation.home
 
+import com.enriqueajin.pomidorki.data.model.PomodoroServiceData
 import com.enriqueajin.pomidorki.data.services.CountdownState
 
 sealed interface TimerScreenContract {
@@ -25,6 +26,16 @@ sealed interface TimerScreenContract {
         data object OnAlertCancelClick : Event()
 
         data object OnRestartIconClick : Event()
+    }
+
+    sealed class InternalEvent {
+        data class ServiceDataUpdated(
+            val data: PomodoroServiceData,
+        ) : InternalEvent()
+
+        data class RestoreSelectedTimer(
+            val index: Int,
+        ) : InternalEvent()
     }
 
     sealed class Effect {
