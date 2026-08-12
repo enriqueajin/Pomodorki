@@ -10,7 +10,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -39,10 +38,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -83,21 +80,6 @@ import com.enriqueajin.pomidorki.presentation.permissionhandling.asManifestPermi
 import com.enriqueajin.pomidorki.presentation.permissionhandling.asPermissionText
 import com.enriqueajin.pomidorki.presentation.permissionhandling.isPermissionGranted
 import com.enriqueajin.pomidorki.presentation.permissionhandling.openAppSettings
-import com.enriqueajin.pomidorki.presentation.ui.theme.darkPink
-import com.enriqueajin.pomidorki.presentation.ui.theme.greenPomodoro
-import com.enriqueajin.pomidorki.presentation.ui.theme.lightGrayPomodoro
-import com.enriqueajin.pomidorki.presentation.ui.theme.longBreakArcBar
-import com.enriqueajin.pomidorki.presentation.ui.theme.longBreakBackground
-import com.enriqueajin.pomidorki.presentation.ui.theme.longBreakPickerContainer
-import com.enriqueajin.pomidorki.presentation.ui.theme.longBreakPickerIndicator
-import com.enriqueajin.pomidorki.presentation.ui.theme.longBreakTimerText
-import com.enriqueajin.pomidorki.presentation.ui.theme.pinkPrimary
-import com.enriqueajin.pomidorki.presentation.ui.theme.pinkSecondary
-import com.enriqueajin.pomidorki.presentation.ui.theme.shortBreakArcBar
-import com.enriqueajin.pomidorki.presentation.ui.theme.shortBreakBackground
-import com.enriqueajin.pomidorki.presentation.ui.theme.shortBreakPickerContainer
-import com.enriqueajin.pomidorki.presentation.ui.theme.shortBreakPickerIndicator
-import com.enriqueajin.pomidorki.presentation.ui.theme.shortBreakTimerText
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_PAUSE
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_SERVICE_START
 import com.enriqueajin.pomidorki.utils.Constants.ACTION_TIMER_TYPE
@@ -151,64 +133,11 @@ fun TimerScreen(
     onSettingsIconClick: () -> Unit,
 ) {
     val context = LocalContext.current
-    val backgroundColor =
-        remember(uiState.selectedTimer) {
-            when (uiState.selectedTimer) {
-                0 -> pinkPrimary
-                1 -> shortBreakBackground
-                2 -> longBreakBackground
-                else -> pinkPrimary
-            }
-        }
-    val containerColor =
-        remember(uiState.selectedTimer) {
-            when (uiState.selectedTimer) {
-                0 -> pinkSecondary
-                1 -> shortBreakPickerContainer
-                2 -> longBreakPickerContainer
-                else -> pinkSecondary
-            }
-        }
-    val indicatorColor =
-        remember(uiState.selectedTimer) {
-            when (uiState.selectedTimer) {
-                0 -> darkPink
-                1 -> shortBreakPickerIndicator
-                2 -> longBreakPickerIndicator
-                else -> pinkSecondary
-            }
-        }
-    val timerArcColor by remember(uiState.selectedTimer) {
-        derivedStateOf {
-            when (uiState.selectedTimer) {
-                0 -> pinkSecondary
-                1 -> shortBreakArcBar
-                2 -> longBreakArcBar
-                else -> pinkSecondary
-            }
-        }
-    }
-    val timeElapsedArcColor =
-        if (isSystemInDarkTheme()) {
-            MaterialTheme.colorScheme.onSurface
-        } else {
-            lightGrayPomodoro
-        }
-    val lightThemeTimerTextColor =
-        remember(uiState.selectedTimer) {
-            when (uiState.selectedTimer) {
-                0 -> darkPink
-                1 -> shortBreakTimerText
-                2 -> longBreakTimerText
-                else -> darkPink
-            }
-        }
-    val timerTextColor =
-        if (isSystemInDarkTheme()) {
-            MaterialTheme.colorScheme.onSurface
-        } else {
-            lightThemeTimerTextColor
-        }
+    val visuals =
+        timerScreenVisuals(
+            selectedTimer = uiState.selectedTimer,
+            currentState = uiState.currentState,
+        )
     val permissionViewModel: PermissionHandlingViewModel = hiltViewModel()
     val dialogQueue = permissionViewModel.visiblePermissionDialogQueue
 
@@ -224,42 +153,6 @@ fun TimerScreen(
                 }
             },
         )
-    val buttonText =
-        remember(uiState.currentState) {
-            when (uiState.currentState) {
-                CountdownState.Started -> "Pause"
-                CountdownState.Paused -> "Resume"
-                else -> "Start"
-            }
-        }
-
-    val buttonIconId =
-        remember(uiState.currentState) {
-            when (uiState.currentState) {
-                CountdownState.Started -> R.drawable.ic_pause
-                CountdownState.Paused -> R.drawable.ic_play
-                else -> R.drawable.ic_play
-            }
-        }
-
-    val dialogTitle =
-        remember(uiState.currentState) {
-            if (uiState.currentState == CountdownState.Started) {
-                R.string.dialog_cancel_title
-            } else {
-                R.string.dialog_reset_title
-            }
-        }
-
-    val dialogDescription =
-        remember(uiState.currentState) {
-            if (uiState.currentState == CountdownState.Started) {
-                R.string.dialog_cancel_text
-            } else {
-                R.string.dialog_reset_text
-            }
-        }
-
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         containerColor = MaterialTheme.colorScheme.background,
@@ -271,7 +164,7 @@ fun TimerScreen(
                         .fillMaxWidth()
                         .fillMaxHeight(0.5f)
                         .clip(RoundedCornerShape(0.dp, 0.dp, 20.dp, 20.dp))
-                        .background(backgroundColor),
+                        .background(visuals.background),
             )
             Column(
                 modifier =
@@ -304,8 +197,8 @@ fun TimerScreen(
                         modifier = Modifier.padding(horizontal = 30.dp),
                         selected = uiState.selectedTimer,
                         items = pomodoroTabItems,
-                        containerColor = containerColor,
-                        indicatorColor = indicatorColor,
+                        containerColor = visuals.pickerContainer,
+                        indicatorColor = visuals.pickerIndicator,
                         onTabSelected = { event(TimerScreenContract.Event.OnTabClicked(it)) },
                     )
                 }
@@ -350,9 +243,9 @@ fun TimerScreen(
                                         0L
                                     },
                                 timerText = uiState.timerText,
-                                indicatorColor = timerArcColor,
-                                trackColor = timeElapsedArcColor,
-                                textColor = timerTextColor,
+                                indicatorColor = visuals.arc,
+                                trackColor = visuals.track,
+                                textColor = visuals.timerTextColor,
                             )
                         }
                     }
@@ -376,7 +269,7 @@ fun TimerScreen(
                                     stringResource(
                                         id = R.string.select_task,
                                     ),
-                                color = timerArcColor,
+                                color = visuals.arc,
                             )
                         },
                         textStyle =
@@ -393,7 +286,7 @@ fun TimerScreen(
                             Icon(
                                 imageVector = Icons.Default.ArrowDropDown,
                                 contentDescription = null,
-                                tint = timerArcColor,
+                                tint = visuals.arc,
                             )
                         },
                         readOnly = true,
@@ -402,7 +295,7 @@ fun TimerScreen(
                         onValueChange = {},
                         colors =
                             OutlinedTextFieldDefaults.colors(
-                                disabledBorderColor = timerArcColor,
+                                disabledBorderColor = visuals.arc,
                                 disabledTextColor = MaterialTheme.colorScheme.onSurface,
                             ),
                     )
@@ -417,9 +310,9 @@ fun TimerScreen(
                                         start.linkTo(parent.start)
                                         end.linkTo(parent.end)
                                     },
-                            text = buttonText,
-                            icon = ImageVector.vectorResource(buttonIconId),
-                            containerColor = if (uiState.currentState == CountdownState.Started) darkPink else greenPomodoro,
+                            text = visuals.buttonText,
+                            icon = ImageVector.vectorResource(visuals.buttonIconId),
+                            containerColor = visuals.buttonContainerColor,
                             onClick = {
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                                     val isPermissionGranted =
@@ -505,8 +398,8 @@ fun TimerScreen(
                             },
                         )
                     },
-                    title = { Text(text = stringResource(dialogTitle)) },
-                    text = { Text(text = stringResource(dialogDescription)) },
+                    title = { Text(text = stringResource(visuals.dialogTitle)) },
+                    text = { Text(text = stringResource(visuals.dialogDescription)) },
                 )
             }
         }
